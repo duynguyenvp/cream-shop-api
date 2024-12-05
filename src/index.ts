@@ -7,7 +7,7 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 
-// import compression from "compression";
+import compression from "compression";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
@@ -81,7 +81,7 @@ async function start() {
   app.use(cookieParser());
   app.use(bodyParser.json({ limit: "50mb" }));
   app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
-  // app.use(compression());
+  app.use(compression);
 
   app.use(morgan("dev"));
   app.use(helmet());

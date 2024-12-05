@@ -2,11 +2,11 @@ import bcrypt from "bcryptjs";
 import { Resolver, Mutation, Arg, Authorized, Query, Ctx } from "type-graphql";
 import jwt from "jsonwebtoken";
 import { Employee } from "../db/models/Employee";
-import { LoginInput, LoginResponse, RegisterInput } from "../dto/authDto";
+import { LoginInputDTO, LoginResponseDTO, RegisterInputDTO } from "../dto/auth.dto";
 import dataSource from "../db/dataSource";
-import UserDto from "../dto/userDto";
+import UserDTO from "../dto/user.dto";
 import { Context } from "../types/Context";
-// import logger from "logger";
+import logger from "../logger";
 
 const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY || "this is a scret key"
 const tokenExpiresIn = parseInt(process.env.TOKEN_EXPIRES_IN || "600");
@@ -15,24 +15,24 @@ const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || "1d";
 @Resolver()
 export class AuthResolver {
   @Authorized("read_record")
-  @Query(() => UserDto, { nullable: true })
-  async profile(@Ctx() { user }: Context): Promise<UserDto | null> {
+  @Query(() => UserDTO, { nullable: true })
+  async profile(@Ctx() { user }: Context): Promise<UserDTO | null> {
     try {
       const employeeRepository = dataSource.getRepository(Employee);
 
-      const exitingUser = await employeeRepository.find({
+      const exitingUser = await employeeRepository.findOne({
         where: { id: user?.id }
       });
       if (!exitingUser) return null;
       return null;
     } catch (error) {
-      // logger.error("Failed to retrieve user profile", error);
+      logger.error("Failed to retrieve user profile", error);
       return null;
     }
   }
   // Đăng ký người dùng mới
-  @Mutation(() => UserDto)
-  async register(@Arg("input") input: RegisterInput): Promise<UserDto> {
+  @Mutation(() => UserDTO)
+  async register(@Arg("input") input: RegisterInputDTO): Promise<UserDTO> {
     const employeeRepository = dataSource.getRepository(Employee);
     const { name, email, phone_number, password } = input;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -46,8 +46,8 @@ export class AuthResolver {
   }
 
   // Đăng nhập và trả về JWT
-  @Mutation(() => LoginResponse)
-  async login(@Arg("input") input: LoginInput): Promise<LoginResponse> {
+  @Mutation(() => LoginResponseDTO)
+  async login(@Arg("input") input: LoginInputDTO): Promise<LoginResponseDTO> {
     const { email, password } = input;
     const employeeRepository = dataSource.getRepository(Employee); // Sử dụng DataSource
 
@@ -88,11 +88,4 @@ export class AuthResolver {
       }
     };
   }
-
-  // // Query lấy danh sách đơn hàng của nhân viên
-  // @Query(() => [Order])
-  // async getOrders(@Arg("employee_id") employee_id: number): Promise<Order[]> {
-  //   const orderRepository = dataSource.getRepository(Order);
-  //   return await orderRepository.find({ where: { employee: { id: employee_id } } });
-  // }
 }

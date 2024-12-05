@@ -1,9 +1,9 @@
 import { InputType, Field, ObjectType } from "type-graphql";
 import { IsEmail, MinLength } from "class-validator";
-import UserDto from "./userDto";
+import UserDTO from "./user.dto";
 
 @InputType()
-export class RegisterInput {
+export class RegisterInputDTO {
   @Field()
   name: string;
 
@@ -20,7 +20,7 @@ export class RegisterInput {
 }
 
 @InputType()
-export class LoginInput {
+export class LoginInputDTO {
   @Field()
   @IsEmail()
   email: string;
@@ -30,13 +30,13 @@ export class LoginInput {
 }
 
 @ObjectType()
-export class LoginResponse {
+export class LoginResponseDTO {
   @Field()
   token: string;
 
   @Field()
   refreshToken: string;
 
-  @Field(() => UserDto)
-  user: UserDto;
+  @Field(() => UserDTO)
+  user: UserDTO;
 }

@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Relation } from 'typeorm';
 import { Order } from './Order';  // Liên kết với bảng Order
-import { EMPLOYEE_ROLE } from '../roles';
+import { ROLES_ENUM } from '../roles';
 
 @Entity()
 export class Employee {
@@ -13,7 +13,7 @@ export class Employee {
   @Column()
   email: string;
 
-  @Column({ default: EMPLOYEE_ROLE })
+  @Column({ default: ROLES_ENUM.EMPLOYEE_ROLE })
   role: string;
 
   @Column({ nullable: true })

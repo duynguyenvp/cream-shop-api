@@ -1,14 +1,16 @@
 import { IRole } from "../types/IRole";
 
-export const EMPLOYEE_ROLE = "employee"
-export const ADMIN_ROLE = "admin"
-export const MANAGER_ROLE = "manager"
-export const DEFAULT_ROLE = EMPLOYEE_ROLE
+export enum ROLES_ENUM {
+  EMPLOYEE_ROLE = "employee",
+  ADMIN_ROLE = "admin",
+  MANAGER_ROLE = "manager"
+}
 
+export const DEFAULT_ROLE = ROLES_ENUM.EMPLOYEE_ROLE;
 
 const ROLES: IRole[] = [
   {
-    name: ADMIN_ROLE,
+    name: ROLES_ENUM.ADMIN_ROLE,
     level: 0,
     permissions: [
       "create_record",
@@ -18,12 +20,12 @@ const ROLES: IRole[] = [
     ]
   },
   {
-    name: MANAGER_ROLE,
+    name: ROLES_ENUM.MANAGER_ROLE,
     level: 1,
     permissions: ["create_record", "read_record", "update_record"]
   },
   {
-    name: EMPLOYEE_ROLE,
+    name: ROLES_ENUM.EMPLOYEE_ROLE,
     level: 2,
     permissions: ["create_record", "read_record"]
   }
