@@ -45,12 +45,12 @@ export class InventoryRepository {
   }
 
   // Xóa một inventory
-  async deleteInventory(inventoryId: number): Promise<void> {
+  async deleteInventory(inventoryId: number): Promise<Inventory> {
     const inventory = await this.repository.findOne({ where: { inventory_id: inventoryId } });
     if (!inventory) {
       throw new Error('Inventory not found');
     }
-    await this.repository.remove(inventory);
+    return this.repository.remove(inventory);
   }
 
   // Tìm kiếm inventory theo tên

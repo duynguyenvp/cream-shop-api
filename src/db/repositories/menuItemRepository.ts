@@ -9,7 +9,7 @@ export class MenuItemRepository {
   }
 
   // Thêm một món ăn mới
-  async createMenuItem(name: string, description: string, price: number): Promise<MenuItem> {
+  async createMenuItem(name: string, description?: string, price?: number): Promise<MenuItem> {
     const menuItem = this.repository.create({
       name,
       description,
@@ -19,7 +19,7 @@ export class MenuItemRepository {
   }
 
   // Cập nhật thông tin món ăn
-  async updateMenuItem(menuItemId: number, name: string, description: string, price: number): Promise<MenuItem> {
+  async updateMenuItem(menuItemId: number, name: string, description?: string, price?: number): Promise<MenuItem> {
     const menuItem = await this.repository.findOne({ where: { menu_item_id: menuItemId } });
     if (menuItem) {
       menuItem.name = name;
@@ -45,12 +45,12 @@ export class MenuItemRepository {
   }
 
   // Xóa một món ăn
-  async deleteMenuItem(menuItemId: number): Promise<void> {
+  async deleteMenuItem(menuItemId: number): Promise<MenuItem> {
     const menuItem = await this.repository.findOne({ where: { menu_item_id: menuItemId } });
     if (!menuItem) {
       throw new Error('Menu item not found');
     }
-    await this.repository.remove(menuItem);
+    return await this.repository.remove(menuItem);
   }
 
   // Tìm kiếm món ăn theo tên
