@@ -1,22 +1,18 @@
 import {
   Entity,
   PrimaryGeneratedColumn,
-  ManyToOne,
   Column,
-  Relation
 } from "typeorm";
-import { MenuItem } from "./MenuItem";
-import { Inventory } from "./Inventory";
 @Entity("recipes")
 export class Recipe {
   @PrimaryGeneratedColumn()
   recipe_id: number;
 
-  @ManyToOne(() => MenuItem, menuItem => menuItem.recipes)
-  menuItem: Relation<MenuItem>;
+  @Column()
+  menuItemId: number;
 
-  @ManyToOne(() => Inventory, inventory => inventory)
-  ingredient: Relation<Inventory>;
+  @Column()
+  ingredientId: number;
 
   @Column("decimal", { precision: 10, scale: 2 })
   quantity: number;

@@ -1,21 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, OneToOne, Relation } from 'typeorm';
-import { Customer } from './Customer';
-import { Employee } from './Employee';
-import { OrderDetail } from './OrderDetail';
-import { Payment } from './Payment';  // Liên kết với bảng Payment
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.orders)
-  @JoinColumn()
-  customer: Relation<Customer>;
+  @Column({ nullable: true })
+  customerId?: number;
 
-  @ManyToOne(() => Employee, (employee) => employee.orders)
-  @JoinColumn()
-  employee: Relation<Employee>;
+  @Column()
+  employeeId: number;
 
   @Column()
   totalPrice: number;
@@ -23,9 +17,6 @@ export class Order {
   @Column()
   status: string;
 
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
-  orderDetails: Relation<OrderDetail>[];
-
-  @OneToOne(() => Payment, (payment) => payment.order, { nullable: true })
-  payment: Relation<Payment>;
+  @Column()
+  paymentId: number;
 }

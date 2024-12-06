@@ -1,3 +1,4 @@
+// import { UnitOfWork } from './db/unitOfWork';
 import "reflect-metadata";
 import "dotenv/config";
 
@@ -14,7 +15,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 
-import { notFound } from "./middlewares/response";
+// import { notFound } from "./middlewares/response";
 
 import { buildDataLoaders } from "./db/dataLoader";
 import { buildSchema } from "type-graphql";
@@ -87,7 +88,7 @@ async function start() {
   app.use(helmet());
   app.use(cors());
   app.use(express.json());
-  app.use(notFound);
+  // app.use(notFound);
 
   // Modified server startup
   await new Promise(resolve =>

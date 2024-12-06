@@ -1,13 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Customer } from './Customer';  // Liên kết với bảng Customer
-
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity()
 export class LoyaltyPoint {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer)
-  customer: Customer;
+  @Column()
+  customerId: number;
 
   @Column()
   points: number;

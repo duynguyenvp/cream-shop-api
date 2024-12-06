@@ -1,6 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Relation } from 'typeorm';
-import { Order } from './Order';  // Liên kết với bảng Order
-
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity()
 export class Customer {
   @PrimaryGeneratedColumn()
@@ -10,11 +8,8 @@ export class Customer {
   name: string;
 
   @Column()
-  email: string;
+  email?: string;
 
   @Column()
   phone: string;
-
-  @OneToMany(() => Order, (order) => order.customer)
-  orders: Relation<Order>[];
 }

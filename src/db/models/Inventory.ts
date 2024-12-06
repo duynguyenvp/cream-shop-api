@@ -1,20 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Relation } from 'typeorm';
-import { Recipe } from './Recipe';  // Liên kết với bảng Recipe
-
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity('inventory')
 export class Inventory {
   @PrimaryGeneratedColumn()
   inventory_id: number;
 
   @Column()
-  name: string;  // Tên nguyên liệu hoặc sản phẩm
+  name: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
-  price: number;  // Giá nguyên liệu
+  price: number;
 
   @Column('decimal', { precision: 10, scale: 2 })
-  quantity: number;  // Số lượng tồn kho
-
-  @OneToMany(() => Recipe, (recipe) => recipe.ingredient)
-  recipes: Relation<Recipe>[];  // Một nguyên liệu có thể dùng trong nhiều công thức
+  in_stock: number;
 }

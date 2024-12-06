@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Relation } from 'typeorm';
-import { Order } from './Order';  // Liên kết với bảng Order
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { ROLES_ENUM } from '../roles';
 
 @Entity()
@@ -21,7 +20,4 @@ export class Employee {
 
   @Column()
   password: string;
-
-  @OneToMany(() => Order, (order) => order.employee)
-  orders: Relation<Order>[];
 }

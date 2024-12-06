@@ -1,3 +1,4 @@
+import { Response } from "express";
 import logger from "../logger";
 
 export const responseFormatter = (_req: any, res: any, next: any) => {
@@ -38,7 +39,7 @@ export const errorHandler = (err: any, _req: any, res: any, next: any) => {
   next();
 };
 
-export function notFound(err: any, _req: any, res: any, next: any) {
+export function notFound(err: any, _req: any, res: Response, next: any) {
   const statusCode = err.statusCode || 404;
   const message = err.message || "Not Found";
 

@@ -1,90 +1,117 @@
-import { CreateRecipeDTO } from "src/dto/createRecipe.dto";
-import { Inventory } from "../models/Inventory";
-import { MenuItem } from "../models/MenuItem";
-import { Recipe } from "../models/Recipe";
 import { Repository } from "typeorm";
+import { Recipe } from "../models/Recipe";
+import { MenuItemRepository } from "./menuItemRepository";
+import { InventoryRepository } from "./InventoryRepository";
 
-class RecipeRepository {
-  private _recipeRepository: Repository<Recipe>;
-  private _menuItemRepository: Repository<MenuItem>;
-  private _inventoryRepository: Repository<Inventory>;
+export class RecipeRepository {
+  private repository: Repository<Recipe>;
+  private menuItemRepository: MenuItemRepository;
+  private inventoryRepository: InventoryRepository;
 
   constructor(
-    recipeRepository: Repository<Recipe>,
-    menuItemRepository: Repository<MenuItem>,
-    inventoryRepository: Repository<Inventory>
+    _repository: Repository<Recipe>,
+    _menuItemRepository: MenuItemRepository,
+    _inventoryRepository: InventoryRepository
   ) {
-    this._recipeRepository = recipeRepository;
-    this._inventoryRepository = inventoryRepository;
-    this._menuItemRepository = menuItemRepository;
+    this.repository = _repository;
+    this.menuItemRepository = _menuItemRepository;
+    this.inventoryRepository = _inventoryRepository;
   }
 
-  async findById(recipeId: number) {
-    const recipe = await this._recipeRepository.findOne({
-      where: { recipe_id: recipeId },
-      relations: ["menuItem", "ingredient"]
-    });
+  // Kiểm tra xem khách hàng có tồn tại không
+  private async checkMenuItemExists(id: number): Promise<boolean> {
+    const menu = await this.menuItemRepository.getMenuItemById(id);
+    return !!menu; // Trả về true nếu khách hàng tồn tại, false nếu không
+  }
 
-    if (!recipe) {
-      throw new Error(`Recipe with id ${recipeId} not found`);
+  private async checkIngredientExists(id: number): Promise<boolean> {
+    const ingredient = await this.inventoryRepository.getInventoryById(id);
+    return !!ingredient; // Trả về true nếu khách hàng tồn tại, false nếu không
+  }
+
+  // Thêm một điểm thưởng cho khách hàng
+  async addLoyaltyPoint(
+    menuId: number,
+    ingredientId: number,
+    quantity: number,
+    unit: string
+  ): Promise<Recipe> {
+    // Kiểm tra xem khách hàng có tồn tại hay không
+    const menuItemExists = await this.checkMenuItemExists(menuId);
+    if (!menuItemExists) {
+      throw new Error("Menu Item not found");
+    }
+    const ingredientExists = await this.checkIngredientExists(ingredientId);
+    if (!ingredientExists) {
+      throw new Error("Ingredient not found");
     }
 
-    return recipe;
+    // Tạo điểm thưởng và lưu vào cơ sở dữ liệu
+    const loyaltyPoint = this.repository.create({
+      menuItemId: menuId,
+      ingredientId: ingredientId,
+      quantity,
+      unit
+    });
+
+    return await this.repository.save(loyaltyPoint);
   }
 
-  async findAll() {
-    const recipes = await this._recipeRepository.find({
-      relations: ["menuItem", "ingredient"]
+  // Cập nhật điểm thưởng của khách hàng
+  async updateLoyaltyPoint(
+    id: number,
+    menuId: number,
+    ingredientId: number,
+    quantity: number,
+    unit: string
+  ): Promise<Recipe> {
+    const menuItemExists = await this.checkMenuItemExists(menuId);
+    if (!menuItemExists) {
+      throw new Error("Menu Item not found");
+    }
+    const ingredientExists = await this.checkIngredientExists(ingredientId);
+    if (!ingredientExists) {
+      throw new Error("Ingredient not found");
+    }
+    const recipe = await this.repository.findOne({
+      where: { recipe_id: id },
+      relations: ["menuItem", "inventory"]
     });
-
-    return recipes;
-  }
-
-  async createRecipe(createRecipeDTO: CreateRecipeDTO) {
-    const menuItem = await this._menuItemRepository.findOneBy({
-      menu_item_id: createRecipeDTO.menuItemId
-    });
-    const ingredient = await this._inventoryRepository.findOneBy({
-      inventory_id: createRecipeDTO.ingredientId
-    });
-
-    if (!menuItem) {
-      throw new Error(
-        `MenuItem with id ${createRecipeDTO.menuItemId} not found`
-      );
+    if (recipe) {
+      recipe.quantity = quantity;
+      recipe.unit = unit;
+      return await this.repository.save(recipe);
     }
 
-    if (!ingredient) {
-      throw new Error(
-        `Ingredient with id ${createRecipeDTO.ingredientId} not found`
-      );
-    }
+    throw new Error("Recipe not found");
+  }
 
-    const recipe = this._recipeRepository.create({
-      menuItem,
-      ingredient,
-      quantity: createRecipeDTO.quantity,
-      unit: createRecipeDTO.unit
+  // Lấy tất cả điểm thưởng
+  async getAllLoyaltyPoints(): Promise<Recipe[]> {
+    return await this.repository.find({ relations: ["customer"] });
+  }
+
+  // Lấy điểm thưởng theo ID
+  async getLoyaltyPointById(loyaltyPointId: number): Promise<Recipe> {
+    const loyaltyPoint = await this.repository.findOne({
+      where: { recipe_id: loyaltyPointId },
+      relations: ["customer"]
     });
-
-    await this._recipeRepository.save(recipe);
-    return recipe;
+    if (!loyaltyPoint) {
+      throw new Error("Loyalty Point not found");
+    }
+    return loyaltyPoint;
   }
 
-  async updateRecipe(recipeId: number, updateData: Partial<Recipe>) {
-    const recipe = await this.findById(recipeId);
-
-    const updatedRecipe = Object.assign(recipe, updateData);
-
-    await this._recipeRepository.save(updatedRecipe);
-    return updatedRecipe;
-  }
-
-  async deleteRecipe(recipeId: number) {
-    const recipe = await this.findById(recipeId);
-
-    await this._recipeRepository.remove(recipe);
+  // Xóa điểm thưởng của khách hàng
+  async deleteLoyaltyPoint(loyaltyPointId: number): Promise<void> {
+    const loyaltyPoint = await this.repository.findOne({
+      where: { recipe_id: loyaltyPointId },
+      relations: ["customer"]
+    });
+    if (!loyaltyPoint) {
+      throw new Error("Loyalty Point not found");
+    }
+    await this.repository.remove(loyaltyPoint);
   }
 }
-
-export default RecipeRepository;

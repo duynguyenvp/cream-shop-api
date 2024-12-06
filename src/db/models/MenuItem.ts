@@ -1,6 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Relation } from 'typeorm';
-import { Recipe } from './Recipe';  // Liên kết với bảng Recipe
-
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity('menu_items')
 export class MenuItem {
   @PrimaryGeneratedColumn()
@@ -14,7 +12,4 @@ export class MenuItem {
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;  // Giá món ăn
-
-  @OneToMany(() => Recipe, (recipe) => recipe.menuItem)
-  recipes: Relation<Recipe>[];  // Một món ăn có thể có nhiều công thức
 }

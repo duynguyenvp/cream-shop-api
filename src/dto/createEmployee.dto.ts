@@ -12,7 +12,8 @@ export class CreateEmployeeDTO {
   password: string;
 
   @IsEnum(ROLES_ENUM)
-  role: string;
+  @IsOptional()
+  role?: string;
 
   @IsOptional()
   @IsString()

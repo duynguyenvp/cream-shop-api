@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, Relation } from 'typeorm';
-import { Order } from './Order';  // Liên kết với bảng Order
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
 export class Payment {
@@ -12,6 +11,6 @@ export class Payment {
   @Column()
   method: string;
 
-  @OneToOne(() => Order, (order) => order.payment)
-  order: Relation<Order>;
+  @Column()
+  orderId: number;
 }

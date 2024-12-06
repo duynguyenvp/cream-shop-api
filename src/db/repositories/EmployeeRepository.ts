@@ -4,14 +4,14 @@ import { CreateEmployeeDTO } from "../../dto/createEmployee.dto";
 import { Repository } from "typeorm";
 
 class EmployeeRepository {
-  private _repository: Repository<Employee>;
-  constructor(repository: Repository<Employee>) {
-    this._repository = repository;
+  private repository: Repository<Employee>;
+
+  constructor(_repository: Repository<Employee>) {
+    this.repository = _repository;
   }
   async findById(id: number) {
-    const employee = await this._repository.findOne({
-      where: { id },
-      relations: ["orders"]
+    const employee = await this.repository.findOne({
+      where: { id }
     });
     if (!employee) {
       throw new Error(`Employee with id ${id} not found`);
@@ -20,7 +20,7 @@ class EmployeeRepository {
   }
 
   async findByEmail(email: string) {
-    const employee = await this._repository.findOne({
+    const employee = await this.repository.findOne({
       where: { email }
     });
     if (!employee) {
@@ -34,25 +34,25 @@ class EmployeeRepository {
     if (errors.length > 0) {
       throw new Error("Validation failed: " + JSON.stringify(errors));
     }
-    const employee = this._repository.create(createEmployeeDTO);
-    await this._repository.save(employee);
+    const employee = this.repository.create(createEmployeeDTO);
+    await this.repository.save(employee);
     return employee;
   }
 
   async updateEmployee(id: number, updateData: Partial<Employee>) {
     const employee = await this.findById(id);
     const updatedEmployee = Object.assign(employee, updateData);
-    await this._repository.save(updatedEmployee);
+    await this.repository.save(updatedEmployee);
     return updatedEmployee;
   }
 
   async deleteEmployee(id: number) {
     const employee = await this.findById(id);
-    await this._repository.remove(employee);
+    await this.repository.remove(employee);
   }
 
   async isEmailExist(email: string) {
-    const employee = await this._repository.findOne({
+    const employee = await this.repository.findOne({
       where: { email }
     });
     return !!employee;
