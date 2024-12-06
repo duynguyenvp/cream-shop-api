@@ -1,5 +1,5 @@
-import {  Repository } from 'typeorm';
-import { MenuItem } from '../models/MenuItem';
+import { In, Repository } from "typeorm";
+import { MenuItem } from "../models/MenuItem";
 
 export class MenuItemRepository {
   private repository: Repository<MenuItem>;
@@ -9,25 +9,36 @@ export class MenuItemRepository {
   }
 
   // Thêm một món ăn mới
-  async createMenuItem(name: string, description?: string, price?: number): Promise<MenuItem> {
+  async createMenuItem(
+    name: string,
+    price: number,
+    description?: string
+  ): Promise<MenuItem> {
     const menuItem = this.repository.create({
       name,
       description,
-      price,
+      price
     });
     return await this.repository.save(menuItem);
   }
 
   // Cập nhật thông tin món ăn
-  async updateMenuItem(menuItemId: number, name: string, description?: string, price?: number): Promise<MenuItem> {
-    const menuItem = await this.repository.findOne({ where: { menu_item_id: menuItemId } });
+  async updateMenuItem(
+    menuItemId: number,
+    name: string,
+    price: number,
+    description?: string
+  ): Promise<MenuItem> {
+    const menuItem = await this.repository.findOne({
+      where: { menu_item_id: menuItemId }
+    });
     if (menuItem) {
       menuItem.name = name;
       menuItem.description = description;
       menuItem.price = price;
       return await this.repository.save(menuItem);
     }
-    throw new Error('Menu item not found');
+    throw new Error("Menu item not found");
   }
 
   // Lấy tất cả món ăn
@@ -37,18 +48,30 @@ export class MenuItemRepository {
 
   // Lấy một món ăn theo ID
   async getMenuItemById(menuItemId: number): Promise<MenuItem> {
-    const menuItem = await this.repository.findOne({ where: { menu_item_id: menuItemId } });
+    const menuItem = await this.repository.findOne({
+      where: { menu_item_id: menuItemId }
+    });
     if (!menuItem) {
-      throw new Error('Menu item not found');
+      throw new Error("Menu item not found");
     }
+    return menuItem;
+  }
+
+  // Lấy một món ăn theo IDs
+  async getMenuItemByIds(menuItemIds: number[]): Promise<MenuItem[]> {
+    const menuItem = await this.repository.find({
+      where: { menu_item_id: In(menuItemIds) }
+    });
     return menuItem;
   }
 
   // Xóa một món ăn
   async deleteMenuItem(menuItemId: number): Promise<MenuItem> {
-    const menuItem = await this.repository.findOne({ where: { menu_item_id: menuItemId } });
+    const menuItem = await this.repository.findOne({
+      where: { menu_item_id: menuItemId }
+    });
     if (!menuItem) {
-      throw new Error('Menu item not found');
+      throw new Error("Menu item not found");
     }
     return await this.repository.remove(menuItem);
   }
@@ -57,16 +80,18 @@ export class MenuItemRepository {
   async searchMenuItemByName(name: string): Promise<MenuItem[]> {
     return await this.repository.find({
       where: {
-        name: name, // Có thể thay đổi logic tìm kiếm nếu cần thiết
-      },
+        name: name // Có thể thay đổi logic tìm kiếm nếu cần thiết
+      }
     });
   }
 
   // Cập nhật giá món ăn
   async updatePrice(menuItemId: number, newPrice: number): Promise<MenuItem> {
-    const menuItem = await this.repository.findOne({ where: { menu_item_id: menuItemId } });
+    const menuItem = await this.repository.findOne({
+      where: { menu_item_id: menuItemId }
+    });
     if (!menuItem) {
-      throw new Error('Menu item not found');
+      throw new Error("Menu item not found");
     }
     menuItem.price = newPrice;
     return await this.repository.save(menuItem);

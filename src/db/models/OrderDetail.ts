@@ -9,7 +9,7 @@ export class OrderDetail {
   orderId: number;
   
   @Column()
-  inventoryId: number;
+  menuItemId: number;
 
   // Số lượng sản phẩm/nguyên liệu trong đơn hàng
   @Column("decimal", { precision: 10, scale: 2 })

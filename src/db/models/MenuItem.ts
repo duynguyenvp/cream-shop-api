@@ -10,6 +10,6 @@ export class MenuItem {
   @Column({ nullable: true })
   description?: string;
 
-  @Column("decimal", { precision: 10, scale: 2, nullable: true })
-  price?: number;
+  @Column("decimal", { precision: 10, scale: 2 })
+  price: number;
 }

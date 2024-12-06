@@ -12,11 +12,10 @@ export class CreateMenuItemInput {
   @IsString()
   description?: string;
 
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field()
   @IsNumber()
   @Min(0)
-  price?: number;
+  price: number;
 }
 
 @InputType()
@@ -33,11 +32,10 @@ export class UpdateMenuItemInput {
   @IsString()
   description?: string;
 
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field()
   @IsNumber()
   @Min(0)
-  price?: number;
+  price: number;
 }
 
 @ObjectType()

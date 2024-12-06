@@ -15,8 +15,8 @@ export class MenuItemController {
     const { name, description, price } = data;
     const menuItem = this.unitOfWork.menuItemRepository.createMenuItem(
       name,
-      description,
-      price
+      price,
+      description
     );
     return menuItem;
   }
@@ -24,7 +24,7 @@ export class MenuItemController {
   // Cập nhật món ăn
   async updateMenuItem(data: UpdateMenuItemInput): Promise<MenuItem> {
     const { menu_item_id, name, description, price } = data;    
-    const menuItem = await this.unitOfWork.menuItemRepository.updateMenuItem(menu_item_id, name, description, price);
+    const menuItem = await this.unitOfWork.menuItemRepository.updateMenuItem(menu_item_id, name, price, description);
     return menuItem;
   }
 

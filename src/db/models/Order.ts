@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity()
 export class Order {
@@ -17,6 +17,6 @@ export class Order {
   @Column()
   status: string;
 
-  @Column()
-  paymentId: number;
+  @Column({ nullable: true })
+  paymentId?: number;
 }

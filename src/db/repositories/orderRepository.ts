@@ -1,93 +1,91 @@
-import { EntityManager, Repository } from "typeorm";
-import { CustomerRepository } from "./customerRepository";
-import EmployeeRepository from "./employeeRepository";
-import { PaymentRepository } from "./paymentRepository";
+import { DeepPartial, Repository } from "typeorm";
 import { Order } from "../models/Order";
-import { OrderDetailRepository } from "./orderDetailRepository";
+import { CreateOrderInput } from "../../dto/order.dto";
+import { OrderDetail } from "../models/OrderDetail";
+import { MenuItem } from "../models/MenuItem";
+import { Employee } from "../models/Employee";
+import { Customer } from "../models/Customer";
+import dataSource from "../dataSource";
 
 export class OrderRepository {
   private repository: Repository<Order>;
-  private customerRepository: CustomerRepository;
-  private employeeRepository: EmployeeRepository;
-  private orderDetailRepository: OrderDetailRepository;
-  private paymentRepository: PaymentRepository;
 
-  constructor(
-    _repository: Repository<Order>,
-    _customerRepository: CustomerRepository,
-    _employeeRepository: EmployeeRepository,
-    _orderDetailRepository: OrderDetailRepository,
-    _paymentRepository: PaymentRepository,
-    manager?: EntityManager
-  ) {
-    if (manager) {
-      this.repository = manager.getRepository(Order);
-    } else {
-      this.repository = _repository;
-    }
-    this.customerRepository = _customerRepository;
-    this.employeeRepository = _employeeRepository;
-    this.orderDetailRepository = _orderDetailRepository;
-    this.paymentRepository = _paymentRepository;
-  }
-
-  // Kiểm tra xem khách hàng có tồn tại không
-  private async checkCustomerExists(customerId: number): Promise<boolean> {
-    const customer = await this.customerRepository.getCustomerById(customerId);
-    return !!customer;
-  }
-
-  // Kiểm tra xem nhân viên có tồn tại không
-  private async checkEmployeeExists(employeeId: number): Promise<boolean> {
-    const employee = await this.employeeRepository.findById(employeeId);
-    return !!employee;
+  constructor(_repository: Repository<Order>) {
+    this.repository = _repository;
   }
 
   // Thêm một đơn hàng mới
-  async addOrder(
-    customerId: number,
-    employeeId: number,
-    totalPrice: number,
-    status: string,
-    orderDetails: any[],
-    payment: any = null
-  ): Promise<Order> {
-    // Kiểm tra xem khách hàng và nhân viên có tồn tại không
-    const customerExists = await this.checkCustomerExists(customerId);
-    if (!customerExists) {
-      throw new Error("Customer not found");
-    }
+  async createOrder(input: CreateOrderInput): Promise<Order> {
+    return new Promise((resolve, _) => {
+      dataSource.transaction(async manager => {
+        const menus = await manager
+          .createQueryBuilder(MenuItem, "menu")
+          .where("menu.menu_item_id IN (:...menuIds)", {
+            menuIds: input.orderDetails.map(od => `${od.menuItemId}`)
+          })
+          .select()
+          .getMany();
 
-    const employeeExists = await this.checkEmployeeExists(employeeId);
-    if (!employeeExists) {
-      throw new Error("Employee not found");
-    }
+        if (menus.length === 0 || menus.length !== input.orderDetails.length) {
+          throw new Error("Please choose the right dishes.");
+        }
+        const totalPrice = menus.reduce((prev, currentValue) => {
+          const menu = input.orderDetails.find(
+            f => f.menuItemId === currentValue.menu_item_id
+          );
+          return prev + currentValue.price * (menu?.quantity ?? 1);
+        }, 0);
+        const employeeExists = await manager
+          .createQueryBuilder(Employee, "employee")
+          .where("employee.id = :id", { id: input.employeeId })
+          .getOne();
+        if (!employeeExists) {
+          throw new Error("Employee not found");
+        }
 
-    // Tạo đơn hàng
-    const order = this.repository.create({
-      customerId: customerId ,
-      employeeId: employeeId ,
-      totalPrice,
-      status
+        let newOrder: DeepPartial<Order> = {
+          employeeId: input.employeeId,
+          totalPrice,
+          status: input.status,
+          paymentId: input.paymentId
+        };
+        if (input.customerId) {
+          const customerExists = await manager
+            .createQueryBuilder(Customer, "customer")
+            .where("customer.id = :id", { id: input.customerId })
+            .getOne();
+          if (!customerExists) {
+            throw new Error("Customer not found");
+          }
+          newOrder.customerId = customerExists.id;
+        }
+
+        const order = manager.getRepository(Order).create(newOrder);
+        const savedOrder = await manager.getRepository(Order).save(order);
+
+        const orderDetails: DeepPartial<OrderDetail[]> = input.orderDetails.map(
+          od => {
+            const selectedMenu = menus.find(
+              f => f.menu_item_id === od.menuItemId
+            );
+            return {
+              orderId: savedOrder.id,
+              menuItemId: od.menuItemId,
+              quantity: od.quantity,
+              price: selectedMenu?.price ?? 0
+            };
+          }
+        );
+        await manager
+          .createQueryBuilder()
+          .insert()
+          .into(OrderDetail)
+          .values(orderDetails)
+          .execute();
+
+        resolve(savedOrder);
+      });
     });
-
-    // Lưu đơn hàng
-    const savedOrder = await this.repository.save(order);
-
-    // Thêm chi tiết đơn hàng (OrderDetails)
-    for (const detail of orderDetails) {
-      await this.orderDetailRepository.addOrderDetail(savedOrder.id, detail); // Giả sử method này thêm chi tiết đơn hàng
-    }
-
-    // Nếu có thanh toán, thêm thanh toán vào đơn hàng
-    if (payment) {
-      await this.paymentRepository.addPayment(
-        payment.amount,
-        payment.method
-      );
-    }
-
-    return savedOrder;
   }
 
   // Cập nhật trạng thái đơn hàng
@@ -118,42 +116,27 @@ export class OrderRepository {
 
   // Lấy tất cả các đơn hàng
   async getAllOrders(): Promise<Order[]> {
-    return await this.repository.find({
-      relations: ["customer", "employee", "orderDetails", "payment"]
-    });
+    return await this.repository.find();
   }
 
   // Lấy các đơn hàng của khách hàng
   async getOrdersByCustomerId(customerId: number): Promise<Order[]> {
-    const customerExists = await this.checkCustomerExists(customerId);
-    if (!customerExists) {
-      throw new Error("Customer not found");
-    }
-
     return await this.repository.find({
-      where: { customerId: customerId },
-      relations: ["customer", "employee", "orderDetails", "payment"]
+      where: { customerId: customerId }
     });
   }
 
   // Lấy các đơn hàng của nhân viên
   async getOrdersByEmployeeId(employeeId: number): Promise<Order[]> {
-    const employeeExists = await this.checkEmployeeExists(employeeId);
-    if (!employeeExists) {
-      throw new Error("Employee not found");
-    }
-
     return await this.repository.find({
-      where: { employeeId: employeeId },
-      relations: ["customer", "employee", "orderDetails", "payment"]
+      where: { employeeId: employeeId }
     });
   }
 
   // Xóa đơn hàng
   async deleteOrder(orderId: number): Promise<void> {
     const order = await this.repository.findOne({
-      where: { id: orderId },
-      relations: ["customer", "employee", "orderDetails", "payment"]
+      where: { id: orderId }
     });
     if (!order) {
       throw new Error("Order not found");

@@ -1,7 +1,6 @@
 import { DataSource } from "typeorm";
 import { OrderRepository } from "./repositories/orderRepository";
 import { InventoryRepository } from "./repositories/InventoryRepository";
-import { OrderDetailRepository } from "./repositories/orderDetailRepository";
 import { CustomerRepository } from "./repositories/customerRepository";
 import { RecipeRepository } from "./repositories/recipeRepository";
 import { PaymentRepository } from "./repositories/paymentRepository";
@@ -14,7 +13,6 @@ import { Inventory } from "./models/Inventory";
 import { LoyaltyPoint } from "./models/LoyaltyPoints";
 import { MenuItem } from "./models/MenuItem";
 import { Order } from "./models/Order";
-import { OrderDetail } from "./models/OrderDetail";
 import { Payment } from "./models/Payment";
 import { Recipe } from "./models/Recipe";
 
@@ -25,16 +23,12 @@ export interface IUnitOfWork {
   loyaltyPointRepository: LoyaltyPointRepository;
   menuItemRepository: MenuItemRepository;
   orderRepository: OrderRepository;
-  orderDetailRepository: OrderDetailRepository;
   paymentRepository: PaymentRepository;
   recipeRepository: RecipeRepository;
-
-  doTransaction(callback: Function): Promise<void>;
 }
 export class UnitOfWork implements IUnitOfWork {
   private _orderRepository: OrderRepository;
   private _inventoryRepository: InventoryRepository;
-  private _orderDetailRepository: OrderDetailRepository;
   private _customerRepository: CustomerRepository;
   private _loyaltyPointRepository: LoyaltyPointRepository;
   private _paymentRepository: PaymentRepository;
@@ -54,14 +48,22 @@ export class UnitOfWork implements IUnitOfWork {
     const menuItemSourceRepo = this._dataSource.getRepository(MenuItem);
     const paymentSourceRepo = this._dataSource.getRepository(Payment);
     const recipeSourceRepo = this._dataSource.getRepository(Recipe);
+    const orderRepo = this._dataSource.getRepository(Order);
 
     this._inventoryRepository = new InventoryRepository(inventorySourceRepo);
     this._customerRepository = new CustomerRepository(customerSourceRepo);
-    this._loyaltyPointRepository = new LoyaltyPointRepository(loyaltyPointSourceRepo);
+    this._loyaltyPointRepository = new LoyaltyPointRepository(
+      loyaltyPointSourceRepo
+    );
     this._paymentRepository = new PaymentRepository(paymentSourceRepo);
     this._employeeRepository = new EmployeeRepository(employeeSourceRepo);
     this._menuItemRepository = new MenuItemRepository(menuItemSourceRepo);
-    this._recipeRepository = new RecipeRepository(recipeSourceRepo, this._menuItemRepository, this._inventoryRepository);
+    this._recipeRepository = new RecipeRepository(
+      recipeSourceRepo,
+      this._menuItemRepository,
+      this._inventoryRepository
+    );
+    this._orderRepository = new OrderRepository(orderRepo);
   }
 
   // Các getter cho các repository
@@ -71,10 +73,6 @@ export class UnitOfWork implements IUnitOfWork {
 
   get inventoryRepository(): InventoryRepository {
     return this._inventoryRepository;
-  }
-
-  get orderDetailRepository(): OrderDetailRepository {
-    return this._orderDetailRepository;
   }
 
   get customerRepository(): CustomerRepository {
@@ -99,28 +97,5 @@ export class UnitOfWork implements IUnitOfWork {
 
   get menuItemRepository(): MenuItemRepository {
     return this._menuItemRepository;
-  }
-
-  // Khởi tạo transaction
-  async doTransaction(callback: Function): Promise<void> {
-    await this._dataSource.transaction(async transactionalEntityManager => {
-      const orderRepo = this._dataSource.getRepository(Order);
-      const orderDetailRepo = this._dataSource.getRepository(OrderDetail);
-      this._orderRepository = new OrderRepository(
-        orderRepo,
-        this._customerRepository,
-        this._employeeRepository,
-        this._orderDetailRepository,
-        this._paymentRepository,
-        transactionalEntityManager
-      );
-      this._orderDetailRepository = new OrderDetailRepository(
-        orderDetailRepo,
-        this._inventoryRepository,
-        transactionalEntityManager
-      );
-
-      callback();
-    });
   }
 }
