@@ -30,7 +30,7 @@ export class RecipeRepository {
   }
 
   // Thêm một điểm thưởng cho khách hàng
-  async addLoyaltyPoint(
+  async createRecipe(
     menuId: number,
     ingredientId: number,
     quantity: number,
@@ -58,7 +58,7 @@ export class RecipeRepository {
   }
 
   // Cập nhật điểm thưởng của khách hàng
-  async updateLoyaltyPoint(
+  async updateRecipe(
     id: number,
     menuId: number,
     ingredientId: number,
@@ -74,12 +74,13 @@ export class RecipeRepository {
       throw new Error("Ingredient not found");
     }
     const recipe = await this.repository.findOne({
-      where: { recipe_id: id },
-      relations: ["menuItem", "inventory"]
+      where: { recipe_id: id }
     });
     if (recipe) {
       recipe.quantity = quantity;
       recipe.unit = unit;
+      recipe.ingredientId = ingredientId;
+      recipe.menuItemId = menuId;
       return await this.repository.save(recipe);
     }
 
@@ -87,31 +88,29 @@ export class RecipeRepository {
   }
 
   // Lấy tất cả điểm thưởng
-  async getAllLoyaltyPoints(): Promise<Recipe[]> {
-    return await this.repository.find({ relations: ["customer"] });
+  async getAllRecipes(): Promise<Recipe[]> {
+    return await this.repository.find();
   }
 
   // Lấy điểm thưởng theo ID
-  async getLoyaltyPointById(loyaltyPointId: number): Promise<Recipe> {
+  async getRecipeById(loyaltyPointId: number): Promise<Recipe> {
     const loyaltyPoint = await this.repository.findOne({
-      where: { recipe_id: loyaltyPointId },
-      relations: ["customer"]
+      where: { recipe_id: loyaltyPointId }
     });
     if (!loyaltyPoint) {
-      throw new Error("Loyalty Point not found");
+      throw new Error("Recipe not found");
     }
     return loyaltyPoint;
   }
 
   // Xóa điểm thưởng của khách hàng
-  async deleteLoyaltyPoint(loyaltyPointId: number): Promise<void> {
+  async deleteRecipe(loyaltyPointId: number): Promise<Recipe> {
     const loyaltyPoint = await this.repository.findOne({
-      where: { recipe_id: loyaltyPointId },
-      relations: ["customer"]
+      where: { recipe_id: loyaltyPointId }
     });
     if (!loyaltyPoint) {
-      throw new Error("Loyalty Point not found");
+      throw new Error("Recipe not found");
     }
-    await this.repository.remove(loyaltyPoint);
+    return await this.repository.remove(loyaltyPoint);
   }
 }
