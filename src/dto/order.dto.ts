@@ -146,11 +146,15 @@ export class OrderResponseDTO {
   }
 
   static setDetailsFromRawData(orderDTO: OrderResponseDTO, rawData: any[]) {
-    const orderDetail = rawData.map(rawDetail => {
-      const temp =
-        OrderDetailReponseDTO.createOrderDetailReponseDTOFromRawData(rawDetail);
-      return temp;
-    });
+    const orderDetail = rawData
+      .filter(f => f.orderDetail_orderId === orderDTO.id)
+      .map(rawDetail => {
+        const temp =
+          OrderDetailReponseDTO.createOrderDetailReponseDTOFromRawData(
+            rawDetail
+          );
+        return temp;
+      });
     return { ...orderDTO, orderDetail };
   }
   static createOrderDtoFromRawData(rawData: any) {

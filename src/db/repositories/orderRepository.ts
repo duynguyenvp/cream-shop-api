@@ -10,6 +10,7 @@ import { OrderDetail } from "../models/OrderDetail";
 import { MenuItem } from "../models/MenuItem";
 import { Employee } from "../models/Employee";
 import { Customer } from "../models/Customer";
+import PaginatedOrders from "../../dto/paginatedOrder.dto";
 
 export class OrderRepository {
   private repository: Repository<Order>;
@@ -122,6 +123,18 @@ export class OrderRepository {
       })
       .getRawMany();
   }
+  private getOrderDetails(orderIds: number[]) {
+    return this._dataSource
+      .getRepository(OrderDetail)
+      .createQueryBuilder("orderDetail")
+      .leftJoinAndSelect(
+        MenuItem,
+        "menuitem",
+        "menuitem.menu_item_id = orderDetail.menuItemId"
+      )
+      .where("orderDetail.orderId IN (:...orderIds)", { orderIds })
+      .getRawMany();
+  }
 
   private getOrderQueryBuilder(
     isCustomerFieldRequested = true,
@@ -171,8 +184,44 @@ export class OrderRepository {
   }
 
   // Lấy tất cả các đơn hàng
-  async getAllOrders(): Promise<Order[]> {
-    return await this.repository.find();
+  async getAllOrders(
+    isCustomerFieldRequested = true,
+    isDetailFieldRequested = true,
+    isEmployeeFieldRequested = true,
+    pageIndex: number,
+    pageSize: number
+  ): Promise<PaginatedOrders> {
+    const queryBuilder = this.getOrderQueryBuilder(
+      isCustomerFieldRequested,
+      isEmployeeFieldRequested
+    );
+    const totalRows = await queryBuilder.getCount();
+    const rawOrders = await queryBuilder
+      .skip((pageIndex - 1) * pageSize)
+      .take(pageSize)
+      .getRawMany();
+
+    const orders: OrderResponseDTO[] = rawOrders.map(rawOrder =>
+      OrderResponseDTO.createOrderDtoFromRawData(rawOrder)
+    );
+    if (isDetailFieldRequested) {
+      const rawOrderDetails = await this.getOrderDetails(orders.map(o => o.id));
+      const result = orders.map(order => {
+        return OrderResponseDTO.setDetailsFromRawData(order, rawOrderDetails);
+      });
+      return {
+        pageIndex,
+        pageSize,
+        total: totalRows,
+        data: result
+      };
+    }
+    return {
+      pageIndex,
+      pageSize,
+      total: totalRows,
+      data: orders
+    };
   }
 
   // Lấy các đơn hàng của khách hàng

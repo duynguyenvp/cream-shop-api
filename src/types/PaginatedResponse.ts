@@ -7,13 +7,13 @@ export default function PaginatedResponse<TItem extends object>(TItemClass: Clas
     total!: number;
   
     @Field(() => Int)
-    offset!: number;
+    pageIndex!: number;
   
     @Field(() => Int)
-    limit!: number;
+    pageSize!: number;
   
     @Field(() => [TItemClass])
-    items: TItem[];
+    data: TItem[];
   }
   return PaginatedResponseClass;
 }
