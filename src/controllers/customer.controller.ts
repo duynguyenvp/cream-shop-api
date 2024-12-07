@@ -1,18 +1,17 @@
 import "dotenv/config";
 
-import { UnitOfWork } from "../db/unitOfWork";
 import { Customer } from "../db/models/Customer";
 import { CreateCustomerInput, UpdateCustomerInput } from "../dto/customer.dto";
+import { CustomerRepository } from "../db/repositories/customerRepository";
 
 export default class CustomerController {
-  private unitOfWork: UnitOfWork;
-  constructor(uow?: UnitOfWork) {
-    if (!uow) throw new Error("uow error");
-    this.unitOfWork = uow;
+  private customerRepository: CustomerRepository;
+  constructor(customerRepository: CustomerRepository) {
+    this.customerRepository = customerRepository;
   }
 
   async customer(id: number): Promise<Customer> {
-    const customer = await this.unitOfWork.customerRepository.getCustomerById(
+    const customer = await this.customerRepository.getCustomerById(
       id
     );
     if (!customer) {
@@ -22,11 +21,11 @@ export default class CustomerController {
   }
 
   async customers(): Promise<Customer[]> {
-    return this.unitOfWork.customerRepository.getAllCustomers();
+    return this.customerRepository.getAllCustomers();
   }
 
   async createCustomer(data: CreateCustomerInput): Promise<Customer> {
-    return this.unitOfWork.customerRepository.createCustomer(
+    return this.customerRepository.createCustomer(
       data.name,
       data.phone,
       data.email
@@ -36,7 +35,7 @@ export default class CustomerController {
   async updateCustomer(
     data: UpdateCustomerInput
   ): Promise<Customer> {
-    return this.unitOfWork.customerRepository.updateCustomer(
+    return this.customerRepository.updateCustomer(
       data.id,
       data.name,
       data.phone,
@@ -45,7 +44,7 @@ export default class CustomerController {
   }
 
   async deleteCustomer(id: number): Promise<boolean> {
-    await this.unitOfWork.customerRepository.deleteCustomer(id);
+    await this.customerRepository.deleteCustomer(id);
     return true;
   }
 }

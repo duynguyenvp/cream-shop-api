@@ -1,31 +1,27 @@
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { Recipe } from "../models/Recipe";
 import { MenuItemRepository } from "./menuItemRepository";
 import { InventoryRepository } from "./InventoryRepository";
 
 export class RecipeRepository {
-  private repository: Repository<Recipe>;
-  private menuItemRepository: MenuItemRepository;
-  private inventoryRepository: InventoryRepository;
+  private _repository: Repository<Recipe>;
+  private _menuItemRepository: MenuItemRepository;
+  private _inventoryRepository: InventoryRepository;
 
-  constructor(
-    _repository: Repository<Recipe>,
-    _menuItemRepository: MenuItemRepository,
-    _inventoryRepository: InventoryRepository
-  ) {
-    this.repository = _repository;
-    this.menuItemRepository = _menuItemRepository;
-    this.inventoryRepository = _inventoryRepository;
+  constructor(dataSource: DataSource) {
+    this._repository = dataSource.getRepository(Recipe);
+    this._menuItemRepository = new MenuItemRepository(dataSource);
+    this._inventoryRepository = new InventoryRepository(dataSource);
   }
 
   // Kiểm tra xem khách hàng có tồn tại không
   private async checkMenuItemExists(id: number): Promise<boolean> {
-    const menu = await this.menuItemRepository.getMenuItemById(id);
+    const menu = await this._menuItemRepository.getMenuItemById(id);
     return !!menu; // Trả về true nếu khách hàng tồn tại, false nếu không
   }
 
   private async checkIngredientExists(id: number): Promise<boolean> {
-    const ingredient = await this.inventoryRepository.getInventoryById(id);
+    const ingredient = await this._inventoryRepository.getInventoryById(id);
     return !!ingredient; // Trả về true nếu khách hàng tồn tại, false nếu không
   }
 
@@ -47,14 +43,14 @@ export class RecipeRepository {
     }
 
     // Tạo điểm thưởng và lưu vào cơ sở dữ liệu
-    const loyaltyPoint = this.repository.create({
+    const loyaltyPoint = this._repository.create({
       menuItemId: menuId,
       ingredientId: ingredientId,
       quantity,
       unit
     });
 
-    return await this.repository.save(loyaltyPoint);
+    return await this._repository.save(loyaltyPoint);
   }
 
   // Cập nhật điểm thưởng của khách hàng
@@ -73,7 +69,7 @@ export class RecipeRepository {
     if (!ingredientExists) {
       throw new Error("Ingredient not found");
     }
-    const recipe = await this.repository.findOne({
+    const recipe = await this._repository.findOne({
       where: { recipe_id: id }
     });
     if (recipe) {
@@ -81,7 +77,7 @@ export class RecipeRepository {
       recipe.unit = unit;
       recipe.ingredientId = ingredientId;
       recipe.menuItemId = menuId;
-      return await this.repository.save(recipe);
+      return await this._repository.save(recipe);
     }
 
     throw new Error("Recipe not found");
@@ -89,12 +85,20 @@ export class RecipeRepository {
 
   // Lấy tất cả điểm thưởng
   async getAllRecipes(): Promise<Recipe[]> {
-    return await this.repository.find();
+    return await this._repository.find();
+  }
+  
+  get menuItemRepository(): MenuItemRepository {
+    return this._menuItemRepository;
+  }
+
+  get inventoryRepository(): InventoryRepository {
+    return this._inventoryRepository;
   }
 
   // Lấy điểm thưởng theo ID
   async getRecipeById(loyaltyPointId: number): Promise<Recipe> {
-    const loyaltyPoint = await this.repository.findOne({
+    const loyaltyPoint = await this._repository.findOne({
       where: { recipe_id: loyaltyPointId }
     });
     if (!loyaltyPoint) {
@@ -105,12 +109,12 @@ export class RecipeRepository {
 
   // Xóa điểm thưởng của khách hàng
   async deleteRecipe(loyaltyPointId: number): Promise<Recipe> {
-    const loyaltyPoint = await this.repository.findOne({
+    const loyaltyPoint = await this._repository.findOne({
       where: { recipe_id: loyaltyPointId }
     });
     if (!loyaltyPoint) {
       throw new Error("Recipe not found");
     }
-    return await this.repository.remove(loyaltyPoint);
+    return await this._repository.remove(loyaltyPoint);
   }
 }

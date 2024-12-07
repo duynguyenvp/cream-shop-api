@@ -2,7 +2,6 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-import { UnitOfWork } from "../db/unitOfWork";
 import {
   LoginInputDTO,
   LoginResponseDTO,
@@ -11,25 +10,23 @@ import {
 import { IUser } from "../types/IUser";
 import logger from "../logger";
 import UserDTO from "../dto/user.dto";
+import EmployeeRepository from "../db/repositories/employeeRepository";
 
 const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY || "this is a scret key";
 const tokenExpiresIn = parseInt(process.env.TOKEN_EXPIRES_IN || "600");
 const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || "1d";
 
 export default class AuthController {
-  private unitOfWork: UnitOfWork;
-  constructor(uow?: UnitOfWork) {
-    console.log("=======> init controller");
-    
-    if(!uow) throw new Error("uow error");
-    this.unitOfWork = uow;
+  private employeeRepository: EmployeeRepository;
+  constructor(employeeRepository: EmployeeRepository) {
+    this.employeeRepository = employeeRepository;
   }
 
   async login(input: LoginInputDTO): Promise<LoginResponseDTO> {
     const { email, password } = input;
 
     // Tìm nhân viên theo email
-    const employee = await this.unitOfWork.employeeRepository.findByEmail(
+    const employee = await this.employeeRepository.findByEmail(
       email
     );
     if (!employee) {
@@ -71,7 +68,7 @@ export default class AuthController {
   async profile(user: IUser | null): Promise<UserDTO | null> {
     if (!user || !user.id) return null;
     try {
-      const exitingUser = await this.unitOfWork.employeeRepository.findById(
+      const exitingUser = await this.employeeRepository.findById(
         user.id
       );
       if (!exitingUser) return null;
@@ -85,7 +82,7 @@ export default class AuthController {
   async register(input: RegisterInputDTO): Promise<UserDTO> {
     const { name, email, phone_number, password } = input;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const employee = this.unitOfWork.employeeRepository.createEmployee({
+    const employee = this.employeeRepository.createEmployee({
       name,
       email,
       phone: phone_number,

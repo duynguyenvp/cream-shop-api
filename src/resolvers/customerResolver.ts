@@ -6,21 +6,21 @@ import {
   UpdateCustomerInput
 } from "../dto/customer.dto";
 import CustomerController from "../controllers/customer.controller";
-import { UnitOfWork } from "../db/unitOfWork";
 import dataSource from "../db/dataSource";
+import { CustomerRepository } from "../db/repositories/customerRepository";
 
 @Resolver()
 export class CustomerResolver {
   @Query(() => CustomerResponse)
   async customer(@Arg("id") id: number): Promise<Customer> {
-    const authController = new CustomerController(new UnitOfWork(dataSource));
+    const authController = new CustomerController(new CustomerRepository(dataSource));
     const customer = await authController.customer(id);
     return customer;
   }
 
   @Query(() => [CustomerResponse])
   async customers(): Promise<Customer[]> {
-    const authController = new CustomerController(new UnitOfWork(dataSource));
+    const authController = new CustomerController(new CustomerRepository(dataSource));
     return authController.customers();
   }
 
@@ -28,7 +28,7 @@ export class CustomerResolver {
   async createCustomer(
     @Arg("data") data: CreateCustomerInput
   ): Promise<Customer> {
-    const authController = new CustomerController(new UnitOfWork(dataSource));
+    const authController = new CustomerController(new CustomerRepository(dataSource));
     return authController.createCustomer(data);
   }
 
@@ -36,13 +36,13 @@ export class CustomerResolver {
   async updateCustomer(
     @Arg("data") data: UpdateCustomerInput
   ): Promise<Customer> {
-    const authController = new CustomerController(new UnitOfWork(dataSource));
+    const authController = new CustomerController(new CustomerRepository(dataSource));
     return authController.updateCustomer(data);
   }
 
   @Mutation(() => Boolean)
   async deleteCustomer(@Arg("id") id: number): Promise<boolean> {
-    const authController = new CustomerController(new UnitOfWork(dataSource));
+    const authController = new CustomerController(new CustomerRepository(dataSource));
     return authController.deleteCustomer(id);
   }
 }

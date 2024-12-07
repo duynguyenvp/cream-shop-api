@@ -1,11 +1,11 @@
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Customer } from '../models/Customer';
 
 export class CustomerRepository {
   private repository: Repository<Customer>;
 
-  constructor(_repository: Repository<Customer>) {
-    this.repository = _repository;
+  constructor(dataSource: DataSource) {
+    this.repository = dataSource.getRepository(Customer);
   }
 
   // Thêm một khách hàng mới

@@ -1,13 +1,13 @@
 import { validate } from "class-validator";
 import { Employee } from "../models/Employee";
 import { CreateEmployeeDTO } from "../../dto/createEmployee.dto";
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 
 class EmployeeRepository {
   private repository: Repository<Employee>;
 
-  constructor(_repository: Repository<Employee>) {
-    this.repository = _repository;
+  constructor(dataSource: DataSource) {
+    this.repository = dataSource.getRepository(Employee);
   }
   async findById(id: number) {
     const employee = await this.repository.findOne({

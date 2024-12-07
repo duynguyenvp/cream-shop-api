@@ -1,11 +1,11 @@
-import { In, Repository } from "typeorm";
+import { DataSource, In, Repository } from "typeorm";
 import { MenuItem } from "../models/MenuItem";
 
 export class MenuItemRepository {
   private repository: Repository<MenuItem>;
 
-  constructor(_repository: Repository<MenuItem>) {
-    this.repository = _repository;
+  constructor(dataSource: DataSource) {
+    this.repository = dataSource.getRepository(MenuItem);
   }
 
   // Thêm một món ăn mới

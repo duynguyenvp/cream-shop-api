@@ -51,4 +51,40 @@ export class MenuItemResponse {
 
   @Field({ nullable: true })
   price?: number;
+
+  constructor();
+  constructor(
+    menu_item_id: number,
+    name: string,
+    description?: string,
+    price?: number
+  );
+
+  constructor(
+    menu_item_id?: number,
+    name?: string,
+    description?: string,
+    price?: number
+  ) {
+    if (menu_item_id && name) {
+      this.menu_item_id = menu_item_id;
+      this.name = name;
+      this.description = description;
+      this.price = price;
+    } else {
+      this.menu_item_id = 0;
+      this.name = "";
+      this.description = undefined;
+      this.price = undefined;
+    }
+  }
+
+  static createMenuItemResponseFromRawData(rawData: any) {
+    return new MenuItemResponse(
+      rawData.menuitem_menu_item_id,
+      rawData.menuitem_name,
+      rawData.menuitem_description,
+      rawData.menuitem_price
+    );
+  }
 }

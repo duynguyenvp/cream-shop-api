@@ -1,23 +1,29 @@
-import { DeepPartial, Repository } from "typeorm";
+import {
+  DataSource,
+  DeepPartial,
+  Repository,
+  SelectQueryBuilder
+} from "typeorm";
 import { Order } from "../models/Order";
-import { CreateOrderInput } from "../../dto/order.dto";
+import { CreateOrderInput, OrderResponseDTO } from "../../dto/order.dto";
 import { OrderDetail } from "../models/OrderDetail";
 import { MenuItem } from "../models/MenuItem";
 import { Employee } from "../models/Employee";
 import { Customer } from "../models/Customer";
-import dataSource from "../dataSource";
 
 export class OrderRepository {
   private repository: Repository<Order>;
+  private _dataSource: DataSource;
 
-  constructor(_repository: Repository<Order>) {
-    this.repository = _repository;
+  constructor(dataSource: DataSource) {
+    this._dataSource = dataSource;
+    this.repository = dataSource.getRepository(Order);
   }
 
   // Thêm một đơn hàng mới
   async createOrder(input: CreateOrderInput): Promise<Order> {
     return new Promise((resolve, _) => {
-      dataSource.transaction(async manager => {
+      this._dataSource.transaction(async manager => {
         const menus = await manager
           .createQueryBuilder(MenuItem, "menu")
           .where("menu.menu_item_id IN (:...menuIds)", {
@@ -102,16 +108,66 @@ export class OrderRepository {
     return await this.repository.save(order);
   }
 
+  private getOrderDetail(orderId: number) {
+    return this._dataSource
+      .getRepository(OrderDetail)
+      .createQueryBuilder("orderDetail")
+      .leftJoinAndSelect(
+        MenuItem,
+        "menuitem",
+        "menuitem.menu_item_id = orderDetail.menuItemId"
+      )
+      .where({
+        orderId: orderId
+      })
+      .getRawMany();
+  }
+
+  private getOrderQueryBuilder(
+    isCustomerFieldRequested = true,
+    isEmployeeFieldRequested = true
+  ): SelectQueryBuilder<Order> {
+    const queryBuilder: SelectQueryBuilder<Order> =
+      this.repository.createQueryBuilder("order");
+    if (isCustomerFieldRequested) {
+      queryBuilder.leftJoinAndSelect(
+        Customer,
+        "customer",
+        "customer.id = order.customerId"
+      );
+    }
+    if (isEmployeeFieldRequested) {
+      queryBuilder.leftJoinAndSelect(
+        Employee,
+        "employee",
+        "employee.id = order.employeeId"
+      );
+    }
+    return queryBuilder;
+  }
+
   // Lấy thông tin đơn hàng theo ID
-  async getOrderById(orderId: number): Promise<Order> {
-    const order = await this.repository.findOne({
-      where: { id: orderId },
-      relations: ["customer", "employee", "orderDetails", "payment"]
-    });
-    if (!order) {
+  async getOrderById(
+    orderId: number,
+    isCustomerFieldRequested = true,
+    isDetailFieldRequested = true,
+    isEmployeeFieldRequested = true
+  ): Promise<OrderResponseDTO> {
+    const queryBuilder = this.getOrderQueryBuilder(
+      isCustomerFieldRequested,
+      isEmployeeFieldRequested
+    );
+    const rawOrder = await queryBuilder.where({ id: orderId }).getRawOne();
+    if (!rawOrder) {
       throw new Error("Order not found");
     }
-    return order;
+    let result: OrderResponseDTO =
+      OrderResponseDTO.createOrderDtoFromRawData(rawOrder);
+    if (isDetailFieldRequested) {
+      const rawDetails = await this.getOrderDetail(orderId);
+      result = OrderResponseDTO.setDetailsFromRawData(result, rawDetails);
+    }
+    return result;
   }
 
   // Lấy tất cả các đơn hàng

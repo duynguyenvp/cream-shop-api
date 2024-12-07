@@ -1,7 +1,7 @@
+import { MenuItemRepository } from "../db/repositories/menuItemRepository";
 import { MenuItemController } from "../controllers/menu.controller";
 import dataSource from "../db/dataSource";
 import { MenuItem } from "../db/models/MenuItem";
-import { UnitOfWork } from "../db/unitOfWork";
 import { CreateMenuItemInput, MenuItemResponse, UpdateMenuItemInput } from "../dto/menuItem.dto";
 import { Resolver, Query, Mutation, Arg } from "type-graphql";
 
@@ -11,7 +11,7 @@ export class MenuItemResolver {
   @Query(() => [MenuItemResponse])
   async menuItems(): Promise<MenuItem[]> {
     const menuItemController = new MenuItemController(
-      new UnitOfWork(dataSource)
+      new MenuItemRepository(dataSource)
     );
     return menuItemController.getAllMenuItems();
   }
@@ -22,7 +22,7 @@ export class MenuItemResolver {
     @Arg("menu_item_id") menu_item_id: number
   ): Promise<MenuItem | undefined> {
     const menuItemController = new MenuItemController(
-      new UnitOfWork(dataSource)
+      new MenuItemRepository(dataSource)
     );
     return menuItemController.getMenuItem(menu_item_id);
   }
@@ -33,7 +33,7 @@ export class MenuItemResolver {
     @Arg("data") data: CreateMenuItemInput
   ): Promise<MenuItem> {
     const menuItemController = new MenuItemController(
-      new UnitOfWork(dataSource)
+      new MenuItemRepository(dataSource)
     );
     return menuItemController.createMenuItem(data);
   }
@@ -44,7 +44,7 @@ export class MenuItemResolver {
     @Arg("data") data: UpdateMenuItemInput
   ): Promise<MenuItem> {
     const menuItemController = new MenuItemController(
-      new UnitOfWork(dataSource)
+      new MenuItemRepository(dataSource)
     );
     return menuItemController.updateMenuItem(data);
   }
@@ -55,7 +55,7 @@ export class MenuItemResolver {
     @Arg("menu_item_id") menu_item_id: number
   ): Promise<boolean> {
     const menuItemController = new MenuItemController(
-      new UnitOfWork(dataSource)
+      new MenuItemRepository(dataSource)
     );
     return menuItemController.deleteMenuItem(menu_item_id);
   }

@@ -13,7 +13,7 @@ export class CreateCustomerInput {
   email?: string;
 
   @Field()
-  @IsPhoneNumber('VI')
+  @IsPhoneNumber("VI")
   phone: string;
 }
 
@@ -32,7 +32,7 @@ export class UpdateCustomerInput {
   email?: string;
 
   @Field({ nullable: true })
-  @IsPhoneNumber('VI')
+  @IsPhoneNumber("VI")
   phone: string;
 }
 
@@ -49,5 +49,30 @@ export class CustomerResponse {
 
   @Field()
   phone: string;
-}
 
+  constructor();
+  constructor(id: number, name: string, phone: string, email?: string);
+
+  constructor(id?: number, name?: string, phone?: string, email?: string) {
+    if (id && name && phone) {
+      this.id = id;
+      this.name = name;
+      this.phone = phone;
+      this.email = email;
+    } else {
+      this.id = 0;
+      this.name = "";
+      this.phone = "";
+      this.email = undefined;
+    }
+  }
+
+  static createCustomerFromRawData(rawData: any) {
+    return new CustomerResponse(
+      rawData.customer_id,
+      rawData.customer_email,
+      rawData.customer_name,
+      rawData.customer_phone
+    );
+  }
+}

@@ -1,11 +1,11 @@
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Inventory } from '../models/Inventory';
 
 export class InventoryRepository {
   private repository: Repository<Inventory>;
 
-  constructor(_repository: Repository<Inventory>) {
-    this.repository = _repository;
+  constructor(datasouce: DataSource) {
+    this.repository = datasouce.getRepository(Inventory);
   }
 
   // Thêm một inventory mới

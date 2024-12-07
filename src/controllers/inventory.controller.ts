@@ -3,20 +3,19 @@ import {
   UpdateInventoryInput
 } from "../dto/inventory.dto";
 import { Inventory } from "../db/models/Inventory";
-import { UnitOfWork } from "../db/unitOfWork";
+import { InventoryRepository } from "../db/repositories/InventoryRepository";
 
 export class InventoryController {
-  private unitOfWork: UnitOfWork;
+  private inventoryRepository: InventoryRepository;
 
-  constructor(uow?: UnitOfWork) {
-    if (!uow) throw new Error("uow error");
-    this.unitOfWork = uow;
+  constructor(inventoryRepository: InventoryRepository) {
+    this.inventoryRepository = inventoryRepository;
   }
 
   // Tạo mới một sản phẩm
   async createInventory(data: CreateInventoryInput): Promise<Inventory> {
     const { name, price, in_stock } = data;
-    const inventory = this.unitOfWork.inventoryRepository.createInventory(
+    const inventory = this.inventoryRepository.createInventory(
       name,
       price,
       in_stock
@@ -26,7 +25,7 @@ export class InventoryController {
 
   // Cập nhật sản phẩm
   async updateInventory(data: UpdateInventoryInput): Promise<Inventory> {
-    const inventory = this.unitOfWork.inventoryRepository.updateInventory(
+    const inventory = this.inventoryRepository.updateInventory(
       data.inventory_id,
       data.name,
       data.price,
@@ -37,17 +36,17 @@ export class InventoryController {
 
   // Lấy danh sách tất cả sản phẩm
   async getAllInventories(): Promise<Inventory[]> {
-    return this.unitOfWork.inventoryRepository.getAllInventory();
+    return this.inventoryRepository.getAllInventory();
   }
 
   // Lấy thông tin sản phẩm theo ID
   async getInventory(inventory_id: number): Promise<Inventory | undefined> {
-    return this.unitOfWork.inventoryRepository.getInventoryById(inventory_id);
+    return this.inventoryRepository.getInventoryById(inventory_id);
   }
 
   // Xóa sản phẩm
   async deleteInventory(inventory_id: number): Promise<boolean> {
-    const inventory = await this.unitOfWork.inventoryRepository.deleteInventory(inventory_id);
+    const inventory = await this.inventoryRepository.deleteInventory(inventory_id);
     if (!inventory) {
       throw new Error("Inventory item not found");
     }
