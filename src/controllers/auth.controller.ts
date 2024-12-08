@@ -1,6 +1,6 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 import {
   LoginInputDTO,
@@ -11,6 +11,7 @@ import { UserSimpleDTO } from "../dto/user.dto";
 import logger from "../logger";
 import UserDTO from "../dto/user.dto";
 import EmployeeRepository from "../db/repositories/employeeRepository";
+import { Employee } from "src/db/models/Employee";
 
 const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY || "this is a scret key";
 const tokenExpiresIn = parseInt(process.env.TOKEN_EXPIRES_IN || "600");
@@ -26,9 +27,7 @@ export default class AuthController {
     const { email, password } = input;
 
     // Tìm nhân viên theo email
-    const employee = await this.employeeRepository.findByEmail(
-      email
-    );
+    const employee = await this.employeeRepository.findByEmail(email);
     if (!employee) {
       throw new Error("Employee not found");
     }
@@ -39,38 +38,13 @@ export default class AuthController {
       throw new Error("Invalid password");
     }
 
-    // Tạo JWT token
-    const payload = {
-      sub: employee.id,
-      email: employee.email,
-      role: employee.role
-    };
-    const accessToken = jwt.sign(payload, AUTH_SECRET_KEY, {
-      expiresIn: tokenExpiresIn
-    });
-    const refreshToken = jwt.sign(payload, AUTH_SECRET_KEY, {
-      expiresIn: refreshTokenExpiresIn
-    });
-
-    return {
-      token: accessToken,
-      refreshToken,
-      user: {
-        id: employee.id,
-        name: employee.name,
-        email: employee.email,
-        role: employee.role,
-        phone: employee.phone
-      }
-    };
+    return this.createLoginResponse(employee);
   }
 
   async profile(user: UserSimpleDTO | null): Promise<UserDTO | null> {
     if (!user || !user.id) return null;
     try {
-      const exitingUser = await this.employeeRepository.findById(
-        user.id
-      );
+      const exitingUser = await this.employeeRepository.findById(user.id);
       if (!exitingUser) return null;
       return exitingUser;
     } catch (error) {
@@ -89,5 +63,63 @@ export default class AuthController {
       password: hashedPassword
     });
     return employee;
+  }
+
+  async refreshToken(refreshToken: string): Promise<LoginResponseDTO> {
+    if (!refreshToken) {
+      throw new Error("Access Denied. No refresh token provided.");
+    }
+    try {
+      const decoded = jwt.verify(refreshToken, AUTH_SECRET_KEY) as JwtPayload;
+      if (decoded.type !== "refresh") {
+        throw new Error("Invalid refresh token type");
+      }
+      const user = await this.employeeRepository.findById(decoded.userId);
+      if (!user) {
+        throw new Error("Invalid refresh token.");
+      }
+      return this.createLoginResponse(user);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private createLoginResponse(user: Employee) {
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    };
+    const accessToken = jwt.sign(
+      {
+        ...payload,
+        type: "access"
+      },
+      AUTH_SECRET_KEY,
+      {
+        expiresIn: tokenExpiresIn
+      }
+    );
+    const newRefreshToken = jwt.sign(
+      {
+        ...payload,
+        type: "refresh"
+      },
+      AUTH_SECRET_KEY,
+      {
+        expiresIn: refreshTokenExpiresIn
+      }
+    );
+    return {
+      token: accessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone
+      }
+    };
   }
 }

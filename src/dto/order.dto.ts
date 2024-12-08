@@ -171,24 +171,3 @@ export class OrderResponseDTO {
     );
   }
 }
-
-@ObjectType()
-export class OrderTestDTO {
-  @Field()
-  id: number;
-
-  @Field({ nullable: true })
-  customerId?: number;
-
-  @Field()
-  employeeId: number;
-
-  @Field()
-  totalPrice: number;
-
-  @Field()
-  status: string;
-
-  @Field({ nullable: true })
-  paymentId?: number;
-}

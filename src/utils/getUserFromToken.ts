@@ -3,7 +3,7 @@ import { UserSimpleDTO } from "../dto/user.dto";
 import dataSource from "../db/dataSource";
 import { Employee } from "../db/models/Employee";
 
-const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY || "this is a scret key"
+const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY || "this is a scret key";
 export function getUserFromToken(token: string): Promise<UserSimpleDTO | null> {
   if (!token) {
     return Promise.resolve(null);
@@ -16,6 +16,9 @@ export function getUserFromToken(token: string): Promise<UserSimpleDTO | null> {
       async (err: any, decoded: any) => {
         if (err) {
           reject(err);
+        }
+        if (!decoded || decoded.type !== "access") {
+          reject(new Error("Invalid token type"));
         } else {
           const user = await dataSource
             .getRepository(Employee)
