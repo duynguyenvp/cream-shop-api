@@ -1,9 +1,8 @@
 import { Resolver, Mutation, Arg, Query, Info } from "type-graphql";
 import dataSource from "../db/dataSource";
 import {
-  CreateOrderInput,
-  OrderResponseDTO,
-  OrderTestDTO
+  CreateOrderInputDTO,
+  OrderResponseDTO
 } from "../dto/order.dto";
 import { OrderController } from "../controllers/order.controller";
 import { OrderRepository } from "../db/repositories/orderRepository";
@@ -14,6 +13,8 @@ import PaginatedOrders from "../dto/paginatedOrder.dto";
 export class OrderResolver {
   @Query(() => PaginatedOrders)
   async orders(
+    @Arg("phone", { nullable: true }) phone: string,
+    @Arg("employeeId", { nullable: true }) employeeId: number,
     @Arg("pageIndex") pageIndex: number,
     @Arg("pageSize") pageSize: number,
     @Info() info: GraphQLResolveInfo
@@ -21,7 +22,13 @@ export class OrderResolver {
     const orderController = new OrderController(
       new OrderRepository(dataSource)
     );
-    const orders = await orderController.getOrders(info, pageIndex, pageSize);
+    const orders = await orderController.getOrders(
+      info,
+      pageIndex,
+      pageSize,
+      phone,
+      employeeId
+    );
     return orders;
   }
 
@@ -37,10 +44,10 @@ export class OrderResolver {
     return order;
   }
 
-  @Mutation(() => OrderTestDTO)
+  @Mutation(() => OrderResponseDTO)
   async createOrder(
-    @Arg("data") data: CreateOrderInput
-  ): Promise<OrderTestDTO> {
+    @Arg("data") data: CreateOrderInputDTO
+  ): Promise<OrderResponseDTO> {
     const orderController = new OrderController(
       new OrderRepository(dataSource)
     );

@@ -1,5 +1,6 @@
 import { DataSource, In, Repository } from "typeorm";
 import { MenuItem } from "../models/MenuItem";
+import PaginatedMenuItems from "../../dto/paginatedMenuItem.dto";
 
 export class MenuItemRepository {
   private repository: Repository<MenuItem>;
@@ -42,8 +43,25 @@ export class MenuItemRepository {
   }
 
   // Lấy tất cả món ăn
-  async getAllMenuItems(): Promise<MenuItem[]> {
-    return await this.repository.find();
+  async getAllMenuItems(
+    pageIndex: number,
+    pageSize: number,
+    name: string
+  ): Promise<PaginatedMenuItems> {
+    const queryBuilder = this.repository.createQueryBuilder("menu_items");
+    if (name) {
+      queryBuilder.andWhere("menu_items.name LIKE :name", {
+        name: `%${name}%`
+      });
+    }
+    queryBuilder.skip((pageIndex - 1) * pageSize).take(pageSize);
+    const [menuitems, total] = await queryBuilder.getManyAndCount();
+    return {
+      pageIndex,
+      pageSize,
+      total,
+      data: menuitems
+    };
   }
 
   // Lấy một món ăn theo ID

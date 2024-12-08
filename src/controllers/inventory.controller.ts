@@ -1,9 +1,10 @@
 import {
-  CreateInventoryInput,
-  UpdateInventoryInput
+  CreateInventoryInputDTO,
+  UpdateInventoryInputDTO
 } from "../dto/inventory.dto";
 import { Inventory } from "../db/models/Inventory";
 import { InventoryRepository } from "../db/repositories/InventoryRepository";
+import PaginatedInventories from "../dto/paginatedInventory.dto";
 
 export class InventoryController {
   private inventoryRepository: InventoryRepository;
@@ -13,7 +14,7 @@ export class InventoryController {
   }
 
   // Tạo mới một sản phẩm
-  async createInventory(data: CreateInventoryInput): Promise<Inventory> {
+  async createInventory(data: CreateInventoryInputDTO): Promise<Inventory> {
     const { name, price, in_stock } = data;
     const inventory = this.inventoryRepository.createInventory(
       name,
@@ -24,7 +25,7 @@ export class InventoryController {
   }
 
   // Cập nhật sản phẩm
-  async updateInventory(data: UpdateInventoryInput): Promise<Inventory> {
+  async updateInventory(data: UpdateInventoryInputDTO): Promise<Inventory> {
     const inventory = this.inventoryRepository.updateInventory(
       data.inventory_id,
       data.name,
@@ -35,8 +36,12 @@ export class InventoryController {
   }
 
   // Lấy danh sách tất cả sản phẩm
-  async getAllInventories(): Promise<Inventory[]> {
-    return this.inventoryRepository.getAllInventory();
+  async getAllInventories(
+    pageIndex: number,
+    pageSize: number,
+    name: string
+  ): Promise<PaginatedInventories> {
+    return this.inventoryRepository.getAllInventory(pageIndex, pageSize, name);
   }
 
   // Lấy thông tin sản phẩm theo ID
@@ -46,7 +51,9 @@ export class InventoryController {
 
   // Xóa sản phẩm
   async deleteInventory(inventory_id: number): Promise<boolean> {
-    const inventory = await this.inventoryRepository.deleteInventory(inventory_id);
+    const inventory = await this.inventoryRepository.deleteInventory(
+      inventory_id
+    );
     if (!inventory) {
       throw new Error("Inventory item not found");
     }

@@ -1,6 +1,6 @@
 import { RecipeRepository } from "../db/repositories/recipeRepository";
 import { Recipe } from "../db/models/Recipe";
-import { CreateRecipeInput, UpdateRecipeInput } from "../dto/recipe.dto";
+import { CreateRecipeInputDTO, UpdateRecipeInputDTO } from "../dto/recipe.dto";
 
 export class RecipeController {
   private recipeRepository: RecipeRepository;
@@ -10,14 +10,14 @@ export class RecipeController {
   }
 
   // Tạo mới công thức
-  async createRecipe(data: CreateRecipeInput): Promise<Recipe> {
+  async createRecipe(data: CreateRecipeInputDTO): Promise<Recipe> {
     const { menuItemId, ingredientId, quantity, unit } = data;
     const recipe = this.recipeRepository.createRecipe(menuItemId, ingredientId, quantity, unit );
     return recipe;
   }
 
   // Cập nhật công thức
-  async updateRecipe(data: UpdateRecipeInput): Promise<Recipe> {
+  async updateRecipe(data: UpdateRecipeInputDTO): Promise<Recipe> {
     const { recipe_id, menuItemId, ingredientId, quantity, unit } = data;
     const recipe = await this.recipeRepository.updateRecipe(recipe_id, menuItemId, ingredientId, quantity, unit);
     return recipe;

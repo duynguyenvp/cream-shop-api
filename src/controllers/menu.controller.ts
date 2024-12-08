@@ -1,6 +1,7 @@
 import { MenuItemRepository } from "../db/repositories/menuItemRepository";
 import { MenuItem } from "../db/models/MenuItem";
-import { CreateMenuItemInput, UpdateMenuItemInput } from "../dto/menuItem.dto";
+import { CreateMenuItemInputDTO, UpdateMenuItemInputDTO } from "../dto/menuItem.dto";
+import PaginatedMenuItems from "../dto/paginatedMenuItem.dto";
 
 export class MenuItemController {
   private menuItemRepository: MenuItemRepository;
@@ -10,7 +11,7 @@ export class MenuItemController {
   }
 
   // Tạo mới món ăn
-  async createMenuItem(data: CreateMenuItemInput): Promise<MenuItem> {
+  async createMenuItem(data: CreateMenuItemInputDTO): Promise<MenuItem> {
     const { name, description, price } = data;
     const menuItem = this.menuItemRepository.createMenuItem(
       name,
@@ -21,15 +22,23 @@ export class MenuItemController {
   }
 
   // Cập nhật món ăn
-  async updateMenuItem(data: UpdateMenuItemInput): Promise<MenuItem> {
+  async updateMenuItem(data: UpdateMenuItemInputDTO): Promise<MenuItem> {
     const { menu_item_id, name, description, price } = data;    
     const menuItem = await this.menuItemRepository.updateMenuItem(menu_item_id, name, price, description);
     return menuItem;
   }
 
   // Lấy tất cả các món ăn
-  async getAllMenuItems(): Promise<MenuItem[]> {
-    return this.menuItemRepository.getAllMenuItems();
+  async getAllMenuItems(
+    pageIndex: number,
+    pageSize: number,
+    name: string
+  ): Promise<PaginatedMenuItems> {
+    return this.menuItemRepository.getAllMenuItems(
+      pageIndex,
+    pageSize,
+    name
+    );
   }
 
   // Lấy một món ăn theo ID

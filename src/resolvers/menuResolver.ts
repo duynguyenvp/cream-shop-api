@@ -2,22 +2,30 @@ import { MenuItemRepository } from "../db/repositories/menuItemRepository";
 import { MenuItemController } from "../controllers/menu.controller";
 import dataSource from "../db/dataSource";
 import { MenuItem } from "../db/models/MenuItem";
-import { CreateMenuItemInput, MenuItemResponse, UpdateMenuItemInput } from "../dto/menuItem.dto";
+import { CreateMenuItemInputDTO, MenuItemResponseDTO, UpdateMenuItemInputDTO } from "../dto/menuItem.dto";
 import { Resolver, Query, Mutation, Arg } from "type-graphql";
+import PaginatedMenuItems from "../dto/paginatedMenuItem.dto";
 
 @Resolver()
 export class MenuItemResolver {
-  // Truy vấn tất cả món ăn
-  @Query(() => [MenuItemResponse])
-  async menuItems(): Promise<MenuItem[]> {
+  @Query(() => PaginatedMenuItems)
+  async menuItems(
+    @Arg("pageIndex") pageIndex: number,
+    @Arg("pageSize") pageSize: number,
+    @Arg("name", { nullable: true }) name: string
+  ): Promise<PaginatedMenuItems> {
     const menuItemController = new MenuItemController(
       new MenuItemRepository(dataSource)
     );
-    return menuItemController.getAllMenuItems();
+    return menuItemController.getAllMenuItems(
+      pageIndex,
+      pageSize,
+      name
+    );
   }
 
   // Truy vấn một món ăn theo ID
-  @Query(() => MenuItemResponse, { nullable: true })
+  @Query(() => MenuItemResponseDTO, { nullable: true })
   async menuItem(
     @Arg("menu_item_id") menu_item_id: number
   ): Promise<MenuItem | undefined> {
@@ -28,9 +36,9 @@ export class MenuItemResolver {
   }
 
   // Tạo một món ăn mới
-  @Mutation(() => MenuItemResponse)
+  @Mutation(() => MenuItemResponseDTO)
   async createMenuItem(
-    @Arg("data") data: CreateMenuItemInput
+    @Arg("data") data: CreateMenuItemInputDTO
   ): Promise<MenuItem> {
     const menuItemController = new MenuItemController(
       new MenuItemRepository(dataSource)
@@ -39,9 +47,9 @@ export class MenuItemResolver {
   }
 
   // Cập nhật một món ăn
-  @Mutation(() => MenuItemResponse)
+  @Mutation(() => MenuItemResponseDTO)
   async updateMenuItem(
-    @Arg("data") data: UpdateMenuItemInput
+    @Arg("data") data: UpdateMenuItemInputDTO
   ): Promise<MenuItem> {
     const menuItemController = new MenuItemController(
       new MenuItemRepository(dataSource)

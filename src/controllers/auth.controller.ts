@@ -7,7 +7,7 @@ import {
   LoginResponseDTO,
   RegisterInputDTO
 } from "../dto/auth.dto";
-import { IUser } from "../types/IUser";
+import { UserSimpleDTO } from "../dto/user.dto";
 import logger from "../logger";
 import UserDTO from "../dto/user.dto";
 import EmployeeRepository from "../db/repositories/employeeRepository";
@@ -65,7 +65,7 @@ export default class AuthController {
     };
   }
 
-  async profile(user: IUser | null): Promise<UserDTO | null> {
+  async profile(user: UserSimpleDTO | null): Promise<UserDTO | null> {
     if (!user || !user.id) return null;
     try {
       const exitingUser = await this.employeeRepository.findById(

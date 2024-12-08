@@ -17,7 +17,6 @@ import cors from "cors";
 
 // import { notFound } from "./middlewares/response";
 
-import { buildDataLoaders } from "./db/dataLoader";
 import { buildSchema } from "type-graphql";
 import { Context } from "./types/Context";
 import { getUserFromToken } from "./utils/getUserFromToken";
@@ -71,7 +70,6 @@ async function start() {
           token: req.headers.authorization,
           request: req,
           response: res,
-          dataLoaders: buildDataLoaders(),
           user,
           error
         };

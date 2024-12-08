@@ -1,12 +1,10 @@
 import { Request, Response } from 'express'
-import { buildDataLoaders } from '../db/dataLoader'
-import { IUser } from './IUser';
+import { UserSimpleDTO } from '../dto/user.dto';
 
 export type Context = {
   token: string | string[] | undefined;
-  user: IUser | null,
+  user: UserSimpleDTO | null,
   error: any | null,
 	request: Request
 	response: Response
-	dataLoaders: ReturnType<typeof buildDataLoaders>
 }

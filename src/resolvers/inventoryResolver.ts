@@ -1,37 +1,42 @@
 import { InventoryController } from "../controllers/inventory.controller";
 import { Inventory } from "../db/models/Inventory";
-import { CreateInventoryInput, InventoryResponse, UpdateInventoryInput } from "../dto/inventory.dto";
+import { CreateInventoryInputDTO, InventoryResponseDTO, UpdateInventoryInputDTO } from "../dto/inventory.dto";
 import { Resolver, Query, Mutation, Arg } from "type-graphql";
 import dataSource from "../db/dataSource";
 import { InventoryRepository } from "../db/repositories/InventoryRepository";
+import PaginatedInventories from "../dto/paginatedInventory.dto";
 
 @Resolver()
 export class InventoryResolver {
   
   // Truy vấn tất cả sản phẩm
-  @Query(() => [InventoryResponse])
-  async inventories(): Promise<Inventory[]> {
+  @Query(() => PaginatedInventories)
+  async inventories(
+    @Arg("pageIndex") pageIndex: number,
+    @Arg("pageSize") pageSize: number,
+    @Arg("name", { nullable: true }) name: string
+  ): Promise<PaginatedInventories> {
     const inventoryController = new InventoryController(new InventoryRepository(dataSource));
-    return inventoryController.getAllInventories();
+    return inventoryController.getAllInventories(pageIndex, pageSize, name);
   }
 
   // Truy vấn một sản phẩm theo ID
-  @Query(() => InventoryResponse, { nullable: true })
+  @Query(() => InventoryResponseDTO, { nullable: true })
   async inventory(@Arg("inventory_id") inventory_id: number): Promise<Inventory | undefined> {
     const inventoryController = new InventoryController(new InventoryRepository(dataSource));
     return inventoryController.getInventory(inventory_id);
   }
 
   // Tạo một sản phẩm mới
-  @Mutation(() => InventoryResponse)
-  async createInventory(@Arg("data") data: CreateInventoryInput): Promise<Inventory> {
+  @Mutation(() => InventoryResponseDTO)
+  async createInventory(@Arg("data") data: CreateInventoryInputDTO): Promise<Inventory> {
     const inventoryController = new InventoryController(new InventoryRepository(dataSource));
     return inventoryController.createInventory(data);
   }
 
   // Cập nhật một sản phẩm
-  @Mutation(() => InventoryResponse)
-  async updateInventory(@Arg("data") data: UpdateInventoryInput): Promise<Inventory> {
+  @Mutation(() => InventoryResponseDTO)
+  async updateInventory(@Arg("data") data: UpdateInventoryInputDTO): Promise<Inventory> {
     const inventoryController = new InventoryController(new InventoryRepository(dataSource));
     return inventoryController.updateInventory(data);
   }

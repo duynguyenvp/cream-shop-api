@@ -2,6 +2,7 @@ import { validate } from "class-validator";
 import { Employee } from "../models/Employee";
 import { CreateEmployeeDTO } from "../../dto/createEmployee.dto";
 import { DataSource, Repository } from "typeorm";
+import PaginatedEmployees from "../../dto/paginatedEmployee.dto";
 
 class EmployeeRepository {
   private repository: Repository<Employee>;
@@ -27,6 +28,30 @@ class EmployeeRepository {
       throw new Error(`Employee with email ${email} not found`);
     }
     return employee;
+  }
+
+  // Lấy tất cả khách hàng
+  async getEmployees(
+    pageIndex: number,
+    pageSize: number,
+    keyword: string
+  ): Promise<PaginatedEmployees> {
+    const queryBuilder = this.repository.createQueryBuilder("employee");
+    if (keyword) {
+      queryBuilder.andWhere("employee.phone LIKE :phone", {
+        phone: `%${keyword}%`
+      })
+      .andWhere("customer.name LIKE :name", { name: `%${keyword}%` })
+      .andWhere("customer.email LIKE :email", { email: `%${keyword}%` });
+    }
+    queryBuilder.skip((pageIndex - 1) * pageSize).take(pageSize);
+    const [employees, total] = await queryBuilder.getManyAndCount();
+    return {
+      pageIndex,
+      pageSize,
+      total,
+      data: employees
+    };
   }
 
   async createEmployee(createEmployeeDTO: CreateEmployeeDTO) {

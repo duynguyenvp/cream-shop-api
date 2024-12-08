@@ -1,5 +1,6 @@
 import { DataSource, Repository } from 'typeorm';
 import { Inventory } from '../models/Inventory';
+import PaginatedInventories from '../../dto/paginatedInventory.dto';
 
 export class InventoryRepository {
   private repository: Repository<Inventory>;
@@ -31,8 +32,25 @@ export class InventoryRepository {
   }
 
   // Lấy danh sách tất cả các inventory
-  async getAllInventory(): Promise<Inventory[]> {
-    return await this.repository.find();
+  async getAllInventory(
+    pageIndex: number,
+    pageSize: number,
+    name: string
+  ): Promise<PaginatedInventories> {
+    const queryBuilder = this.repository.createQueryBuilder("inventory");
+    if (name) {
+      queryBuilder.andWhere("inventory.name LIKE :name", {
+        name: `%${name}%`
+      });
+    }
+    queryBuilder.skip((pageIndex - 1) * pageSize).take(pageSize);
+    const [ingredients, total] = await queryBuilder.getManyAndCount();
+    return {
+      pageIndex,
+      pageSize,
+      total,
+      data: ingredients
+    };
   }
 
   // Lấy một inventory theo ID

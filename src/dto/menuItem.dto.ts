@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from "type-graphql";
 import { IsString, IsOptional, IsNumber, Min } from "class-validator";
 
 @InputType()
-export class CreateMenuItemInput {
+export class CreateMenuItemInputDTO {
   @Field()
   @IsString()
   name: string;
@@ -19,7 +19,7 @@ export class CreateMenuItemInput {
 }
 
 @InputType()
-export class UpdateMenuItemInput {
+export class UpdateMenuItemInputDTO {
   @Field()
   menu_item_id: number;
 
@@ -39,7 +39,7 @@ export class UpdateMenuItemInput {
 }
 
 @ObjectType()
-export class MenuItemResponse {
+export class MenuItemResponseDTO {
   @Field()
   menu_item_id: number;
 
@@ -80,7 +80,7 @@ export class MenuItemResponse {
   }
 
   static createMenuItemResponseFromRawData(rawData: any) {
-    return new MenuItemResponse(
+    return new MenuItemResponseDTO(
       rawData.menuitem_menu_item_id,
       rawData.menuitem_name,
       rawData.menuitem_description,

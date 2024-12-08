@@ -2,12 +2,12 @@ import { RecipeRepository } from "../db/repositories/recipeRepository";
 import { RecipeController } from "../controllers/recipe.controller";
 import dataSource from "../db/dataSource";
 import { Recipe } from "../db/models/Recipe";
-import { InventoryResponse } from "../dto/inventory.dto";
-import { MenuItemResponse } from "../dto/menuItem.dto";
+import { InventoryResponseDTO } from "../dto/inventory.dto";
+import { MenuItemResponseDTO } from "../dto/menuItem.dto";
 import {
-  CreateRecipeInput,
-  RecipeResponse,
-  UpdateRecipeInput
+  CreateRecipeInputDTO,
+  RecipeResponseDTO,
+  UpdateRecipeInputDTO
 } from "../dto/recipe.dto";
 import {
   Resolver,
@@ -18,17 +18,17 @@ import {
   Root
 } from "type-graphql";
 
-@Resolver(() => RecipeResponse)
+@Resolver(() => RecipeResponseDTO)
 export class RecipeResolver {
   // Truy vấn tất cả công thức
-  @Query(() => [RecipeResponse])
+  @Query(() => [RecipeResponseDTO])
   async recipes(): Promise<Recipe[]> {
     const recipeController = new RecipeController(new RecipeRepository(dataSource));
     return recipeController.getAllRecipes();
   }
 
   // Truy vấn một công thức theo ID
-  @Query(() => RecipeResponse, { nullable: true })
+  @Query(() => RecipeResponseDTO, { nullable: true })
   async recipe(
     @Arg("recipe_id") recipe_id: number
   ): Promise<Recipe | undefined> {
@@ -37,15 +37,15 @@ export class RecipeResolver {
   }
 
   // Tạo công thức mới
-  @Mutation(() => RecipeResponse)
-  async createRecipe(@Arg("data") data: CreateRecipeInput): Promise<Recipe> {
+  @Mutation(() => RecipeResponseDTO)
+  async createRecipe(@Arg("data") data: CreateRecipeInputDTO): Promise<Recipe> {
     const recipeController = new RecipeController(new RecipeRepository(dataSource));
     return recipeController.createRecipe(data);
   }
 
   // Cập nhật công thức
-  @Mutation(() => RecipeResponse)
-  async updateRecipe(@Arg("data") data: UpdateRecipeInput): Promise<Recipe> {
+  @Mutation(() => RecipeResponseDTO)
+  async updateRecipe(@Arg("data") data: UpdateRecipeInputDTO): Promise<Recipe> {
     const recipeController = new RecipeController(new RecipeRepository(dataSource));
     return recipeController.updateRecipe(data);
   }
@@ -58,8 +58,8 @@ export class RecipeResolver {
   }
 
   // FieldResolver để lấy thông tin về MenuItem
-  @FieldResolver(() => MenuItemResponse)
-  async menuItem(@Root() recipe: Recipe): Promise<MenuItemResponse> {
+  @FieldResolver(() => MenuItemResponseDTO)
+  async menuItem(@Root() recipe: Recipe): Promise<MenuItemResponseDTO> {
     const recipeRepository = new RecipeRepository(dataSource);
     // Lấy thông tin MenuItem từ menuItemId trong Recipe
     const menuItem = await recipeRepository.menuItemRepository.getMenuItemById(
@@ -69,8 +69,8 @@ export class RecipeResolver {
   }
 
   // FieldResolver để lấy thông tin về MenuItem
-  @FieldResolver(() => InventoryResponse)
-  async ingredient(@Root() recipe: Recipe): Promise<InventoryResponse> {
+  @FieldResolver(() => InventoryResponseDTO)
+  async ingredient(@Root() recipe: Recipe): Promise<InventoryResponseDTO> {
     const recipeRepository = new RecipeRepository(dataSource);
     // Lấy thông tin MenuItem từ menuItemId trong Recipe
     const ingredient = await recipeRepository.inventoryRepository.getInventoryById(

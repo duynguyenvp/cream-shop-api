@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from "type-graphql";
 import { IsEmail, IsOptional, IsPhoneNumber, Length } from "class-validator";
 
 @InputType()
-export class CreateCustomerInput {
+export class CreateCustomerInputDTO {
   @Field()
   @Length(1, 255)
   name: string;
@@ -18,7 +18,7 @@ export class CreateCustomerInput {
 }
 
 @InputType()
-export class UpdateCustomerInput {
+export class UpdateCustomerInputDTO {
   @Field()
   id: number;
 
@@ -37,7 +37,7 @@ export class UpdateCustomerInput {
 }
 
 @ObjectType()
-export class CustomerResponse {
+export class CustomerResponseDTO {
   @Field()
   id: number;
 
@@ -68,11 +68,11 @@ export class CustomerResponse {
   }
 
   static createCustomerFromRawData(rawData: any) {
-    return new CustomerResponse(
+    return new CustomerResponseDTO(
       rawData.customer_id,
-      rawData.customer_email,
       rawData.customer_name,
-      rawData.customer_phone
+      rawData.customer_phone,
+      rawData.customer_email
     );
   }
 }

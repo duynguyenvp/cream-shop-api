@@ -1,10 +1,10 @@
 import { Field, InputType, ObjectType } from "type-graphql";
 import { IsString, IsNumber, Min } from "class-validator";
-import { MenuItemResponse } from "./menuItem.dto";
-import { InventoryResponse } from "./inventory.dto";
+import { MenuItemResponseDTO } from "./menuItem.dto";
+import { InventoryResponseDTO } from "./inventory.dto";
 
 @InputType()
-export class CreateRecipeInput {
+export class CreateRecipeInputDTO {
   @Field()
   @IsNumber()
   menuItemId: number;
@@ -24,7 +24,7 @@ export class CreateRecipeInput {
 }
 
 @InputType()
-export class UpdateRecipeInput {
+export class UpdateRecipeInputDTO {
   @Field()
   recipe_id: number;
 
@@ -47,15 +47,15 @@ export class UpdateRecipeInput {
 }
 
 @ObjectType()
-export class RecipeResponse {
+export class RecipeResponseDTO {
   @Field()
   recipe_id: number;
 
-  @Field(() => MenuItemResponse)
-  menuItem: MenuItemResponse;
+  @Field(() => MenuItemResponseDTO)
+  menuItem: MenuItemResponseDTO;
 
-  @Field(() => InventoryResponse)
-  ingredient: InventoryResponse;
+  @Field(() => InventoryResponseDTO)
+  ingredient: InventoryResponseDTO;
 
   @Field()
   quantity: number;

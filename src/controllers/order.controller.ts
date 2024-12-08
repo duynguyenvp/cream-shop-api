@@ -1,5 +1,4 @@
-import { CreateOrderInput, OrderResponseDTO } from "src/dto/order.dto";
-import { Order } from "../db/models/Order";
+import { CreateOrderInputDTO, OrderResponseDTO } from "src/dto/order.dto";
 import { OrderRepository } from "../db/repositories/orderRepository";
 import { GraphQLResolveInfo } from "graphql";
 import { getFieldPaths } from "../utils/checkRequestedField";
@@ -12,14 +11,16 @@ export class OrderController {
     this.orderRepository = orderRepository;
   }
   // Tạo đơn hàng mới kèm theo các chi tiết đơn hàng
-  async createOrder(data: CreateOrderInput): Promise<Order> {
+  async createOrder(data: CreateOrderInputDTO): Promise<OrderResponseDTO> {
     return this.orderRepository.createOrder(data);
   }
 
   async getOrders(
     info: GraphQLResolveInfo,
     pageIndex: number,
-    pageSize: number
+    pageSize: number,
+    phone?: string,
+    employeeId?: number,
   ): Promise<PaginatedOrders> {
     const requestedFields = getFieldPaths(info);
     let isCustomerFieldRequested = requestedFields.includes("data.customer");
@@ -31,7 +32,9 @@ export class OrderController {
       isDetailFieldRequested,
       isEmployeeFieldRequested,
       pageIndex,
-      pageSize
+      pageSize,
+      phone,
+      employeeId
     );
   }
 

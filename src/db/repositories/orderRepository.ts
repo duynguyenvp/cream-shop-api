@@ -5,12 +5,13 @@ import {
   SelectQueryBuilder
 } from "typeorm";
 import { Order } from "../models/Order";
-import { CreateOrderInput, OrderResponseDTO } from "../../dto/order.dto";
+import { CreateOrderInputDTO, OrderResponseDTO } from "../../dto/order.dto";
 import { OrderDetail } from "../models/OrderDetail";
 import { MenuItem } from "../models/MenuItem";
 import { Employee } from "../models/Employee";
 import { Customer } from "../models/Customer";
 import PaginatedOrders from "../../dto/paginatedOrder.dto";
+import { checkExistedWhereCondition } from "../../utils/checkExistedWhereCondition";
 
 export class OrderRepository {
   private repository: Repository<Order>;
@@ -22,7 +23,7 @@ export class OrderRepository {
   }
 
   // Thêm một đơn hàng mới
-  async createOrder(input: CreateOrderInput): Promise<Order> {
+  async createOrder(input: CreateOrderInputDTO): Promise<OrderResponseDTO> {
     return new Promise((resolve, _) => {
       this._dataSource.transaction(async manager => {
         const menus = await manager
@@ -90,7 +91,8 @@ export class OrderRepository {
           .values(orderDetails)
           .execute();
 
-        resolve(savedOrder);
+        const resoponse = this.getOrderById(savedOrder.id, true, true, true);
+        resolve(resoponse);
       });
     });
   }
@@ -189,12 +191,28 @@ export class OrderRepository {
     isDetailFieldRequested = true,
     isEmployeeFieldRequested = true,
     pageIndex: number,
-    pageSize: number
+    pageSize: number,
+    phone?: string,
+    employeeId?: number
   ): Promise<PaginatedOrders> {
     const queryBuilder = this.getOrderQueryBuilder(
       isCustomerFieldRequested,
       isEmployeeFieldRequested
     );
+    if (phone) {
+      if (checkExistedWhereCondition(queryBuilder)) {
+        queryBuilder.andWhere("customer.phone = :phone", { phone: phone });
+      } else {
+        queryBuilder.where("customer.phone = :phone", { phone: phone });
+      }
+    }
+    if (employeeId) {
+      if (checkExistedWhereCondition(queryBuilder)) {
+        queryBuilder.andWhere({ employeeId: employeeId });
+      } else {
+        queryBuilder.where({ employeeId: employeeId });
+      }
+    }
     const totalRows = await queryBuilder.getCount();
     const rawOrders = await queryBuilder
       .skip((pageIndex - 1) * pageSize)
@@ -204,7 +222,7 @@ export class OrderRepository {
     const orders: OrderResponseDTO[] = rawOrders.map(rawOrder =>
       OrderResponseDTO.createOrderDtoFromRawData(rawOrder)
     );
-    if (isDetailFieldRequested) {
+    if (isDetailFieldRequested && orders.length > 0) {
       const rawOrderDetails = await this.getOrderDetails(orders.map(o => o.id));
       const result = orders.map(order => {
         return OrderResponseDTO.setDetailsFromRawData(order, rawOrderDetails);

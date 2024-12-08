@@ -5,6 +5,7 @@ import { InventoryResolver } from "./inventoryResolver";
 import { MenuItemResolver } from "./menuResolver";
 import { RecipeResolver } from "./recipeResolver";
 import { OrderResolver } from "./orderResolver";
+import { EmployeeResolver } from "./employeeResolver";
 
 const resolvers: NonEmptyArray<Function> = [
   AuthResolver,
@@ -12,7 +13,8 @@ const resolvers: NonEmptyArray<Function> = [
   InventoryResolver,
   MenuItemResolver,
   RecipeResolver,
-  OrderResolver
+  OrderResolver,
+  EmployeeResolver
 ];
 
 export default resolvers;

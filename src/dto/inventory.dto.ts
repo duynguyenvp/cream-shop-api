@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from "type-graphql";
 import { IsString, IsNumber, Min } from "class-validator";
 
 @InputType()
-export class CreateInventoryInput {
+export class CreateInventoryInputDTO {
   @Field()
   @IsString()
   name: string;
@@ -18,7 +18,7 @@ export class CreateInventoryInput {
 }
 
 @InputType()
-export class UpdateInventoryInput {
+export class UpdateInventoryInputDTO {
   @Field()
   inventory_id: number;
 
@@ -37,7 +37,7 @@ export class UpdateInventoryInput {
 }
 
 @ObjectType()
-export class InventoryResponse {
+export class InventoryResponseDTO {
   @Field()
   inventory_id: number;
 

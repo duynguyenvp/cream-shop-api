@@ -1,4 +1,5 @@
-import { Field, ID, ObjectType } from "type-graphql";
+import { IsEmail, IsOptional, IsPhoneNumber, Length } from "class-validator";
+import { Field, ID, InputType, ObjectType } from "type-graphql";
 
 @ObjectType()
 export default class UserDTO {
@@ -53,4 +54,30 @@ export default class UserDTO {
       rawData.employee_phone
     );
   }
+}
+
+@InputType()
+export class UpdateUserInputDTO {
+  @Field()
+  id: number;
+
+  @Field()
+  @Length(1, 255)
+  name: string;
+
+  @Field({ nullable: true })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+  
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsPhoneNumber("VI")
+  phone?: string;
+}
+
+export type UserSimpleDTO = {
+  id?: number,
+  email?: string,
+  role?: string,
 }
