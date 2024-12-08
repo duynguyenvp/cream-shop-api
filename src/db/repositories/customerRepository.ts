@@ -1,6 +1,7 @@
 import { DataSource, Repository } from "typeorm";
 import { Customer } from "../models/Customer";
 import PaginatedCustomers from "../../dto/paginatedCustomer.dto";
+import { removeAccents } from "../../utils/removeAccents";
 
 export class CustomerRepository {
   private repository: Repository<Customer>;
@@ -56,7 +57,10 @@ export class CustomerRepository {
       });
     }
     if (name) {
-      queryBuilder.andWhere("customer.name LIKE :name", { name: `%${name}%` });
+      queryBuilder
+        .andWhere("customer.search_vector @@ to_tsquery(:query)", {
+          query: removeAccents(name).split(" ").join(" & ")
+        });
     }
     queryBuilder.skip((pageIndex - 1) * pageSize).take(pageSize);
     const [customers, total] = await queryBuilder.getManyAndCount();

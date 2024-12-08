@@ -12,7 +12,7 @@
     "migration:generate": "yarn typeorm migration:generate -d src/db/dataSource.ts",
     "migration:create": "yarn typeorm migration:create",
     "migration:run": "yarn typeorm migration:run -d ./src/db/dataSource.ts",
-    "migration:revert": "typeorm migration:revert -d src/db/dataSource.ts"
+    "migration:revert": "yarn typeorm migration:revert -d src/db/dataSource.ts"
   },
   "keywords": [],
   "author": "",

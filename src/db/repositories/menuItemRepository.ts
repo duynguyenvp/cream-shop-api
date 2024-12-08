@@ -1,6 +1,7 @@
 import { DataSource, In, Repository } from "typeorm";
 import { MenuItem } from "../models/MenuItem";
 import PaginatedMenuItems from "../../dto/paginatedMenuItem.dto";
+import { removeAccents } from "../../utils/removeAccents";
 
 export class MenuItemRepository {
   private repository: Repository<MenuItem>;
@@ -50,9 +51,10 @@ export class MenuItemRepository {
   ): Promise<PaginatedMenuItems> {
     const queryBuilder = this.repository.createQueryBuilder("menu_items");
     if (name) {
-      queryBuilder.andWhere("menu_items.name LIKE :name", {
-        name: `%${name}%`
-      });
+      queryBuilder
+        .where("menu_items.search_vector @@ to_tsquery(:query)", {
+          query: removeAccents(name).split(" ").join(" & ")
+        });
     }
     queryBuilder.skip((pageIndex - 1) * pageSize).take(pageSize);
     const [menuitems, total] = await queryBuilder.getManyAndCount();

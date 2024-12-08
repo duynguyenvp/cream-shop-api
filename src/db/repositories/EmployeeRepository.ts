@@ -3,6 +3,7 @@ import { Employee } from "../models/Employee";
 import { CreateEmployeeDTO } from "../../dto/createEmployee.dto";
 import { DataSource, Repository } from "typeorm";
 import PaginatedEmployees from "../../dto/paginatedEmployee.dto";
+import { removeAccents } from "../../utils/removeAccents";
 
 class EmployeeRepository {
   private repository: Repository<Employee>;
@@ -38,11 +39,15 @@ class EmployeeRepository {
   ): Promise<PaginatedEmployees> {
     const queryBuilder = this.repository.createQueryBuilder("employee");
     if (keyword) {
-      queryBuilder.andWhere("employee.phone LIKE :phone", {
-        phone: `%${keyword}%`
-      })
-      .andWhere("customer.name LIKE :name", { name: `%${keyword}%` })
-      .andWhere("customer.email LIKE :email", { email: `%${keyword}%` });
+      queryBuilder
+        .where("employee.search_vector @@ to_tsquery(:query)", {
+          query: removeAccents(keyword).split(" ").join(" & ")
+        });
+      queryBuilder
+        .andWhere("employee.phone LIKE :phone", {
+          phone: `%${keyword}%`
+        })
+        .andWhere("customer.email LIKE :email", { email: `%${keyword}%` });
     }
     queryBuilder.skip((pageIndex - 1) * pageSize).take(pageSize);
     const [employees, total] = await queryBuilder.getManyAndCount();
