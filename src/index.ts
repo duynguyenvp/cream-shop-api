@@ -47,7 +47,14 @@ async function start() {
       authChecker: authChecker,
       validate: false
     }),
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    formatError: error => {
+      logger.error("Apollo error:", error);
+      return {
+        message: error.message,
+        code: error.extensions?.code || "INTERNAL_SERVER_ERROR"
+      };
+    }
   });
   await server.start();
 
@@ -92,7 +99,9 @@ async function start() {
   await new Promise(resolve =>
     httpServer.listen({ port: port }, resolve as () => void)
   );
-  logger.info(`Server is listening on port ${port}! Graphql is ready on localhost:${port}/graph`);
+  logger.info(
+    `Server is listening on port ${port}! Graphql is ready on localhost:${port}/graph`
+  );
 }
 
 start().catch(err => logger.error("Server startup error:", err));
